@@ -20,7 +20,7 @@ import redis
 from broker.service import api
 
 
-def create_job(app_id, cmd, img, init_size,
+def create_job(app_id, cmd, img, init_size, env_vars,
                config_id="", 
                cas_addr="",
                scone_heap="200M",
@@ -37,30 +37,16 @@ def create_job(app_id, cmd, img, init_size,
     obj_meta = kube.client.V1ObjectMeta(
         name=app_id)
     
-    envs = [kube.client.V1EnvVar(
-        name="S_USERNAME",
-        value=api.swift_username),
-    kube.client.V1EnvVar(
-        name="PASSWORD",
-        value=api.swift_password),
-    kube.client.V1EnvVar(
-        name="AUTH_URL",
-        value=api.swift_authurl),
-    kube.client.V1EnvVar(
-        name="PROJECT_ID",
-        value=api.swift_projectid),
-    kube.client.V1EnvVar(
-        name="PROJECT_NAME",
-        value=api.swift_projectname),
-    kube.client.V1EnvVar(
-        name="PROJECT_DOMAIN_NAME",
-        value=api.swift_domainname),
-    kube.client.V1EnvVar(
-        name="USER_DOMAIN_NAME",
-        value=api.swift_userdname),
-    kube.client.V1EnvVar(
-        name="CONTAINER_NAME",
-        value=api.swift_container)]
+        
+    envs = []
+
+    for key in env_vars.keys():
+
+        var = kube.client.V1EnvVar(
+                name=key,
+                value=env_vars[key])
+
+        envs.append(var)
 
     # add redis address to ``args``
     cmd.append("redis-%s" % app_id)

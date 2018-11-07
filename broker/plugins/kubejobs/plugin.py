@@ -62,7 +62,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
             k8s.create_job(self.app_id,
                            data['cmd'], data['img'],
-                           data['init_size'])
+                           data['init_size'], data['env_vars'])
 
             starting_time = datetime.datetime.now().\
                 strftime('%Y-%m-%dT%H:%M:%S.%fGMT')
@@ -82,7 +82,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             # Starting controller
             data.update({'redis_ip': redis_ip, 'redis_port': redis_port})
             controller.start_controller_k8s(api.controller_url,
-                                            self.app_id, data)
+                                             self.app_id, data)
 
             job_completed = False
 
@@ -96,6 +96,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             controller.stop_controller(api.controller_url, self.app_id)
             print "stoped services"
             # delete redis resources
+            
             time.sleep(float(30))
             k8s.delete_redis_resources(self.app_id)
 
