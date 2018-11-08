@@ -37,6 +37,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
     def __init__(self, app_id):
         self.id = ID_Generator().get_ID()
         self.app_id = app_id
+        self.status = "created"
 
     def start_application(self, data):
         try:
@@ -64,6 +65,8 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                            data['cmd'], data['img'],
                            data['init_size'], data['env_vars'])
 
+            self.update_application_state("created")
+
             starting_time = datetime.datetime.now().\
                 strftime('%Y-%m-%dT%H:%M:%S.%fGMT')
             
@@ -87,23 +90,35 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             job_completed = False
 
             while not job_completed:
+                self.update_application_state("ongoing")
                 time.sleep(1)
                 job_completed = k8s.completed(self.app_id)
 
             # Stop monitor and controller
+
+            self.update_application_state("finished")
+
             print "job finished"
             monitor.stop_monitor(api.monitor_url, self.app_id)
             controller.stop_controller(api.controller_url, self.app_id)
             print "stoped services"
+
             # delete redis resources
-            
             time.sleep(float(30))
             k8s.delete_redis_resources(self.app_id)
 
         except Exception as ex:
+            self.update_application_state("error")
             print "ERROR: %s" % ex
 
         print "Application finished."
+
+    def get_application_state(self):
+        return self.status
+
+    def update_application_state(self, state):
+        self.status = state
+
 
 class KubeJobsProvider(base.PluginInterface):
 
@@ -131,4 +146,3 @@ class KubeJobsProvider(base.PluginInterface):
                                            args=(data,))
         handling_thread.start()
         return app_id, executor
-
