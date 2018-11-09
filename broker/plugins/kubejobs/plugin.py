@@ -118,8 +118,8 @@ class KubeJobsExecutor(GenericApplicationExecutor):
     def update_application_state(self, state):
         self.status = state
 
-    def finish_application(self):
-        self.rds.flushall()
+    def stop_application(self):
+        self.rds.delete("job")
 
 
 class KubeJobsProvider(base.PluginInterface):

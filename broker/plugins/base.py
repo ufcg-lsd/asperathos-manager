@@ -153,7 +153,7 @@ class GenericApplicationExecutor(ApplicationExecutor):
     def update_application_state(self, state):
         pass
 
-    def finish_application(self,redis):
+    def stop_application(self,redis):
         pass
 
     def get_application_execution_time(self):

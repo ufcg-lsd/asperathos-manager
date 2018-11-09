@@ -77,7 +77,7 @@ def stop_submission(submission_id, data):
 
         # TODO: Call the executor by submission_id and stop the execution.
 
-        submissions[submission_id].finish_application()
+        submissions[submission_id].stop_application()
 
         return submissions[submission_id]
 
