@@ -96,7 +96,6 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             # Stop monitor and controller
 
             if(self.get_application_state() == "ongoing"):
-                
                 self.update_application_state("completed")
 
             print "job finished"
@@ -106,7 +105,6 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
             # delete redis resources
             time.sleep(float(30))
-            
             if not self.get_application_state() == 'terminated':
                 k8s.delete_redis_resources(self.app_id)
 

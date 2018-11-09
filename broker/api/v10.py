@@ -17,7 +17,7 @@ from broker.utils import api as u
 from broker.service.api import v10 as api
 
 
-rest = u.Rest('v10', __name__) 
+rest = u.Rest('v10', __name__)
 
 
 """ Run a new submission and returns a submission id.

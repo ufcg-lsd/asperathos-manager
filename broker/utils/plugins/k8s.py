@@ -235,6 +235,3 @@ def terminate_job(app_id, namespace="default"):
     delete_redis_resources(app_id)
     batch_v1.delete_namespaced_job(
         name=app_id, namespace=namespace, body=delete)
-
-
-    
