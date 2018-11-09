@@ -66,8 +66,6 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                            data['cmd'], data['img'],
                            data['init_size'], data['env_vars'])
 
-            self.update_application_state("created")
-
             starting_time = datetime.datetime.now().\
                 strftime('%Y-%m-%dT%H:%M:%S.%fGMT')
             
@@ -97,7 +95,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
             # Stop monitor and controller
 
-            self.update_application_state("finished")
+            self.update_application_state("completed")
 
             print "job finished"
             monitor.stop_monitor(api.monitor_url, self.app_id)
