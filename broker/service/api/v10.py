@@ -81,6 +81,29 @@ def stop_submission(submission_id, data):
 
         return submissions[submission_id]
 
+def terminate_submission(submission_id, data):
+
+    if 'username' not in data or 'password' not in data:
+        API_LOG.log("Missing parameters in request")
+        raise ex.BadRequestException()
+    
+    username = data['username']
+    password = data['password']  
+
+    authorization = authorizer.get_authorization(api.authorization_url,
+                                                 username, password)
+
+    if not authorization['success']:
+        API_LOG.log("Unauthorized request")
+        raise ex.UnauthorizedException()
+
+    else:
+        if submission_id not in submissions.keys():
+            API_LOG.log("Wrong request")
+            raise ex.BadRequestException()
+
+        submissions[submission_id].terminate_job()
+
 
 def list_submissions():
     submissions_status = {}

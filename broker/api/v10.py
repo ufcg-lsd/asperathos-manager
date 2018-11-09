@@ -17,7 +17,7 @@ from broker.utils import api as u
 from broker.service.api import v10 as api
 
 
-rest = u.Rest('v10', __name__)
+rest = u.Rest('v10', __name__) 
 
 
 """ Run a new submission and returns a submission id.
@@ -39,6 +39,16 @@ def run_submission(data):
 def stop_submission(submission_id, data):
     return u.render(api.stop_submission(submission_id, data))
 
+
+""" Terminate a running submission.
+
+    Normal response codes: 204
+    Error response codes: 400, 401
+"""
+@rest.put('/submissions/<submission_id>/terminate')
+def terminate_submission(submission_id, data=None):
+    return u.render(api.terminate_submission(submission_id, data))
+ 
 
 """ List all submissions (done or not).
 

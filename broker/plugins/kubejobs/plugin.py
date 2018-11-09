@@ -39,6 +39,8 @@ class KubeJobsExecutor(GenericApplicationExecutor):
         self.app_id = app_id
         self.rds = None
         self.status = "created"
+        self.job_completed = False
+        self.terminated = False
 
     def start_application(self, data):
         try:
@@ -86,16 +88,16 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             controller.start_controller_k8s(api.controller_url,
                                              self.app_id, data)
 
-            job_completed = False
-
-            while not job_completed:
+            while not self.job_completed and not self.terminated:
                 self.update_application_state("ongoing")
+                self.job_completed = k8s.completed(self.app_id)
                 time.sleep(1)
-                job_completed = k8s.completed(self.app_id)
 
             # Stop monitor and controller
 
-            self.update_application_state("completed")
+            if(self.get_application_state() == "ongoing"):
+                
+                self.update_application_state("completed")
 
             print "job finished"
             monitor.stop_monitor(api.monitor_url, self.app_id)
@@ -104,7 +106,9 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
             # delete redis resources
             time.sleep(float(30))
-            k8s.delete_redis_resources(self.app_id)
+            
+            if not self.get_application_state() == 'terminated':
+                k8s.delete_redis_resources(self.app_id)
 
         except Exception as ex:
             self.update_application_state("error")
@@ -118,6 +122,11 @@ class KubeJobsExecutor(GenericApplicationExecutor):
     def update_application_state(self, state):
         self.status = state
 
+    def terminate_job(self):
+        k8s.terminate_job(self.app_id)
+        self.update_application_state("terminated")
+        self.terminated = True
+    
     def stop_application(self):
         self.rds.delete("job")
 

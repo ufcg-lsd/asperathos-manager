@@ -224,3 +224,17 @@ def delete_redis_resources(app_id, namespace="default"):
     CoreV1Api.delete_namespaced_service(
         name=name, namespace=namespace, body=delete)
 
+def terminate_job(app_id, namespace="default"):
+
+    kube.config.load_kube_config(api.k8s_conf_path)
+
+    batch_v1 = kube.client.BatchV1Api()
+    
+    delete = kube.client.V1DeleteOptions(propagation_policy='Foreground')
+
+    delete_redis_resources(app_id)
+    batch_v1.delete_namespaced_job(
+        name=app_id, namespace=namespace, body=delete)
+
+
+    
