@@ -37,6 +37,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
     def __init__(self, app_id):
         self.id = ID_Generator().get_ID()
         self.app_id = app_id
+        self.rds = None
         self.status = "created"
 
     def start_application(self, data):
@@ -52,20 +53,18 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             # e.g. api.redis_creation_timeout.
             redis_ip, redis_port = k8s.provision_redis_or_die(self.app_id)
 
-            rds = redis.StrictRedis(host=redis_ip, port=redis_port)
+            self.rds = redis.StrictRedis(host=redis_ip, port=redis_port)
             queue_size = len(jobs)
 
             print "Creating Redis queue"
             for job in jobs:
-                rds.rpush("job", job)
+                self.rds.rpush("job", job)
 
             print "Creating Job"
 
             k8s.create_job(self.app_id,
                            data['cmd'], data['img'],
                            data['init_size'], data['env_vars'])
-
-            self.update_application_state("created")
 
             starting_time = datetime.datetime.now().\
                 strftime('%Y-%m-%dT%H:%M:%S.%fGMT')
@@ -96,7 +95,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
             # Stop monitor and controller
 
-            self.update_application_state("finished")
+            self.update_application_state("completed")
 
             print "job finished"
             monitor.stop_monitor(api.monitor_url, self.app_id)
@@ -118,6 +117,9 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
     def update_application_state(self, state):
         self.status = state
+
+    def stop_application(self):
+        self.rds.delete("job")
 
 
 class KubeJobsProvider(base.PluginInterface):
