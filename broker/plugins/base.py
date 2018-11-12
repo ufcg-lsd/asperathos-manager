@@ -128,6 +128,10 @@ class ApplicationExecutor(object):
     @required
     def get_application_state(self):
         pass
+    
+    @required
+    def terminate_job(self):
+        pass
 
     @required
     def update_application_state(self, state):
@@ -149,8 +153,14 @@ class GenericApplicationExecutor(ApplicationExecutor):
 
     def get_application_state(self):
         pass
+    
+    def terminate_job(self):
+        pass
 
     def update_application_state(self, state):
+        pass
+
+    def stop_application(self,redis):
         pass
 
     def get_application_execution_time(self):

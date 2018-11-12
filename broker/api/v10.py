@@ -40,6 +40,16 @@ def stop_submission(submission_id, data):
     return u.render(api.stop_submission(submission_id, data))
 
 
+""" Terminate a running submission.
+
+    Normal response codes: 204
+    Error response codes: 400, 401
+"""
+@rest.put('/submissions/<submission_id>/terminate')
+def terminate_submission(submission_id, data=None):
+    return u.render(api.terminate_submission(submission_id, data))
+ 
+
 """ List all submissions (done or not).
 
     Normal response codes: 200
