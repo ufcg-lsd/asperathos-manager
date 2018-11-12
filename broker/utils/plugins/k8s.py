@@ -50,6 +50,7 @@ def create_job(app_id, cmd, img, init_size, env_vars,
 
     # add redis address to ``args``
     cmd.append("redis-%s" % app_id)
+    cmd.append(config_id)
 
     isgx = kube.client.V1VolumeMount(
         mount_path="/dev/isgx",

@@ -63,7 +63,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
             k8s.create_job(self.app_id,
                            data['cmd'], data['img'],
-                           data['init_size'], data['env_vars'])
+                           data['init_size'], data['env_vars'], config_id=data["config_id"])
 
             self.update_application_state("created")
 
