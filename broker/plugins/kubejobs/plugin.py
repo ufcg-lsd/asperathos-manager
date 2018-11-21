@@ -55,6 +55,14 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             # e.g. api.redis_creation_timeout.
             redis_ip, redis_port = k8s.provision_redis_or_die(self.app_id)
 
+            # inject REDIS_HOST in the environment
+            data['env_vars']['REDIS_HOST'] = 'redis-%s' % self.app_id
+
+            # inject SCONE_CONFIG_ID in the environment
+            # FIXME: make SCONE_CONFIG_ID optional in submission
+            data['env_vars']['SCONE_CONFIG_ID'] = data['config_id']
+
+            # create a new Redis client and fill the work queue
             self.rds = redis.StrictRedis(host=redis_ip, port=redis_port)
             queue_size = len(jobs)
 
