@@ -41,7 +41,15 @@ Or using tox command:
 ```
 $ tox -e venv -- broker
 ```
-
+### Run Unit Tests
+ In order to execute a unit test of a specific class run the following command:
+ ```
+$ pytest broker/test/unit/path/to/test/test_class.py
+```
+ Or run all test cases using tox command:
+ ```
+$ tox
+```
 ## Broker REST API
 Endpoints are avaliable on [restapi-endpoints.md](https://github.com/bigsea-ufcg/bigsea-manager/tree/master/docs/restapi-endpoints.md) documentation.
 

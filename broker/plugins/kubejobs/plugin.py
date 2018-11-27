@@ -41,6 +41,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
         self.status = "created"
         self.job_completed = False
         self.terminated = False
+        self.k8s = k8s
 
     def start_application(self, data):
         try:
@@ -53,7 +54,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             # Provision a redis database for the job. Die in case of error.
             # TODO(clenimar): configure ``timeout`` via a request param,
             # e.g. api.redis_creation_timeout.
-            redis_ip, redis_port = k8s.provision_redis_or_die(self.app_id)
+            redis_ip, redis_port = self.k8s.provision_redis_or_die(self.app_id)
 
             # inject REDIS_HOST in the environment
             data['env_vars']['REDIS_HOST'] = 'redis-%s' % self.app_id
@@ -63,7 +64,9 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             data['env_vars']['SCONE_CONFIG_ID'] = data['config_id']
 
             # create a new Redis client and fill the work queue
-            self.rds = redis.StrictRedis(host=redis_ip, port=redis_port)
+            if(self.rds == None):
+                self.rds = redis.StrictRedis(host=redis_ip, port=redis_port)
+
             queue_size = len(jobs)
 
             print "Creating Redis queue"
@@ -72,7 +75,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
             print "Creating Job"
 
-            k8s.create_job(self.app_id,
+            self.k8s.create_job(self.app_id,
                            data['cmd'], data['img'],
                            data['init_size'], data['env_vars'], config_id=data["config_id"])
 
@@ -98,7 +101,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
             while not self.job_completed and not self.terminated:
                 self.update_application_state("ongoing")
-                self.job_completed = k8s.completed(self.app_id)
+                self.job_completed = self.k8s.completed(self.app_id)
                 time.sleep(1)
 
             # Stop monitor and controller
@@ -112,9 +115,9 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             print "stoped services"
 
             # delete redis resources
-            time.sleep(float(30))
+            #time.sleep(float(30))
             if not self.get_application_state() == 'terminated':
-                k8s.delete_redis_resources(self.app_id)
+                self.k8s.delete_redis_resources(self.app_id)
 
         except Exception as ex:
             self.update_application_state("error")
@@ -129,7 +132,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
         self.status = state
 
     def terminate_job(self):
-        k8s.terminate_job(self.app_id)
+        self.k8s.terminate_job(self.app_id)
         self.update_application_state("terminated")
         self.terminated = True
     
