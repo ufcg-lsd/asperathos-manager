@@ -125,7 +125,6 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                                          'submission_time': starting_time,
                                          'redis_ip': redis_ip,
                                          'redis_port': redis_port,
-                                         'graphic_metrics': True,
                                          'enable_visualizer': self.enable_visualizer})#,
                                          #'cpu_agent_port': agent_port})
 
