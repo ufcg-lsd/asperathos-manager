@@ -25,6 +25,9 @@ from broker.plugins.kubejobs.plugin import KubeJobsProvider
 from broker.tests.unit.mocks.k8s_mock import MockKube
 from broker.tests.unit.mocks.redis_mock import MockRedis
 
+"""
+Class that represents the tests of the KubeJobs plugin
+"""
 
 class TestKubeJobsPlugin(unittest.TestCase):
 
@@ -45,6 +48,7 @@ class TestKubeJobsPlugin(unittest.TestCase):
         pass
 
     """
+    Test the start and stop of the KubeJobs plugin
     """
     def test_start_stop_application(self):
 

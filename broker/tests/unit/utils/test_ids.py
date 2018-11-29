@@ -17,6 +17,10 @@ import unittest
 
 from broker.utils.ids import ID_Generator
 
+"""
+Class that represents the tests of the ID Generator
+"""
+
 class TestIDGenerator(unittest.TestCase):
 
     """

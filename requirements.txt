@@ -16,6 +16,7 @@ pytz
 pytest
 pyOpenSSL
 redis
+requests_mock
 six
 stevedore
 werkzeug
