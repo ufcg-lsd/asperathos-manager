@@ -46,7 +46,7 @@ def stop_submission(submission_id, data):
     Error response codes: 400, 401
 """
 @rest.put('/submissions/<submission_id>/terminate')
-def terminate_submission(submission_id, data=None):
+def terminate_submission(submission_id, data):
     return u.render(api.terminate_submission(submission_id, data))
  
 

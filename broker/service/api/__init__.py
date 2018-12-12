@@ -24,6 +24,7 @@ try:
     """ Services configuration """
     monitor_url = config.get('services', 'monitor_url')
     controller_url = config.get('services', 'controller_url')
+    visualizer_url = config.get('services', 'visualizer_url')
     authorization_url = config.get('services', 'authorization_url')
     optimizer_url = config.get('services', 'optimizer_url')
     

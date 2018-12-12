@@ -18,7 +18,7 @@ import kubernetes as kube
 import redis
 
 from broker.service import api
-
+from influxdb import InfluxDBClient
 
 def create_job(app_id, cmd, img, init_size, env_vars,
                config_id="", 
@@ -226,8 +226,97 @@ def terminate_job(app_id, namespace="default"):
 
     batch_v1 = kube.client.BatchV1Api()
     
-    delete = kube.client.V1DeleteOptions(propagation_policy='Foreground')
+    delete = kube.client.V1DeleteOptions()
 
     delete_redis_resources(app_id)
     batch_v1.delete_namespaced_job(
         name=app_id, namespace=namespace, body=delete)
+
+def create_influxdb(app_id, database_name="asperathos",
+                 img="influxdb", namespace="default", 
+                 visualizer_port=8086, timeout=60):
+
+    kube.config.load_kube_config(api.k8s_conf_path)
+
+    influx_pod_spec = {
+        "apiVersion": "v1",
+        "kind": "Pod",
+        "metadata": {
+            "name": "influxdb-%s" % app_id,
+            "labels": {
+                "app": "influxdb-%s" % app_id
+            }
+        },
+        "spec": {
+            "containers": [{
+                "name": "influxdb-master", 
+                "image": img,
+                "env": [{
+                    "name": "MASTER",
+                    "value": str(True)
+                }],
+                "ports": [{
+                    "containerPort": visualizer_port
+                }]
+            }]
+        }
+    }
+
+    influx_svc_spec = {
+        "apiVersion": "v1",
+        "kind": "Service",
+        "metadata": {
+            "name": "influxdb-%s" % app_id,
+            "labels": {
+                "app": "influxdb-%s" % app_id
+            }
+        },
+        "spec": {
+            "ports": [{
+                "protocol": "TCP",
+                "port": 8086,
+                "targetPort": 8086
+            }],
+            "selector": {
+                "app": "influxdb-%s" % app_id
+            },
+            "type": "NodePort"
+        }
+    }
+
+    CoreV1Api = kube.client.CoreV1Api()
+    node_port = None
+    
+    try:
+        print("Creating InfluxDB Pod...")
+        CoreV1Api.create_namespaced_pod(
+            namespace=namespace, body=influx_pod_spec)
+        print("Creating InfluxDB Service...") 
+        s = CoreV1Api.create_namespaced_service(
+            namespace=namespace, body=influx_svc_spec)
+        ready = False
+        attempts = timeout
+        while not ready:
+            read = CoreV1Api.read_namespaced_pod_status(name="influxdb-%s" % app_id, namespace=namespace)
+            node_port = s.spec.ports[0].node_port
+
+            if read.status.phase == "Running" and node_port != None:
+                try:
+                    #TODO change redis_ip to node_ip
+                    client = InfluxDBClient(api.redis_ip, node_port, 'root', 'root', database_name)
+                    client.create_database(database_name)
+                    print("InfluxDB is ready!!")
+                    ready = True
+                except Exception as e:
+                    print("InfluxDB is not ready yet...")
+            else:
+                attempts -= 1
+                if attempts > 0: 
+                    time.sleep(1)                    
+                else: raise Exception("InfluxDB cannot be started! Time limite exceded...")
+            time.sleep(1)
+
+        influxdb_data = {"port": node_port, "name": database_name}
+        return influxdb_data
+    except kube.client.rest.ApiException as e:
+        print(e)

@@ -26,6 +26,7 @@ from broker.utils.logger import Log
 from broker.utils.plugins import k8s
 from broker.utils.framework import monitor
 from broker.utils.framework import controller
+from broker.utils.framework import visualizer
 from broker.service import api
 
 LOG = Log("ChronosPlugin", "logs/chronos_plugin.log")
@@ -41,6 +42,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
         self.status = "created"
         self.job_completed = False
         self.terminated = False
+        self.visualizer_url = "URL not generated!"
 
     def start_application(self, data):
         try:
@@ -66,6 +68,37 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             self.rds = redis.StrictRedis(host=redis_ip, port=redis_port)
             queue_size = len(jobs)
 
+            # Check if a visualizer will be created
+            self.enable_visualizer = data['enable_visualizer']
+
+            # Create all visualizer components
+            if self.enable_visualizer:
+                # Specify the datasource to be used in the visualization
+                datasource_type = data['visualizer_info']['datasource_type']
+                
+                if datasource_type == "influxdb":
+                    database_data = k8s.create_influxdb(self.app_id)
+                    #TODO {javan} change name of redis_ip to node_ip in configuration file
+                    database_data.update({"url": api.redis_ip})
+                    data['monitor_info'].update({'database_data': database_data})
+                    data['visualizer_info'].update({'database_data': database_data})
+
+                data['monitor_info'].update({'datasource_type': datasource_type})
+
+                print "Creating Visualization plataform"
+
+                data['visualizer_info'].update({'enable_visualizer': data['enable_visualizer'],
+                                         'plugin': data['monitor_plugin'],
+                                         'visualizer_plugin': data['visualizer_plugin']})
+                
+                visualizer.start_visualization(api.visualizer_url,
+                                            self.app_id, data['visualizer_info'])
+
+                self.visualizer_url = visualizer.get_visualizer_url(api.visualizer_url,
+                                                                    self.app_id)
+
+                print "Dashboard of the job created on: %s" % (self.visualizer_url)
+
             print "Creating Redis queue"
             for job in jobs:
                 self.rds.rpush("job", job)
@@ -85,7 +118,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                                          'submission_time': starting_time,
                                          'redis_ip': redis_ip,
                                          'redis_port': redis_port,
-                                         'graphic_metrics': data['graphic_metrics']})
+                                         'enable_visualizer': self.enable_visualizer})
 
             monitor.start_monitor(api.monitor_url, self.app_id,
                                   data['monitor_plugin'],
@@ -101,18 +134,24 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                 self.job_completed = k8s.completed(self.app_id)
                 time.sleep(1)
 
-            # Stop monitor and controller
+            # Stop monitor, controller and visualizer
 
             if(self.get_application_state() == "ongoing"):
                 self.update_application_state("completed")
 
-            print "job finished"
+            print "Job finished"
+
+            #time.sleep(float(30))
+            time.sleep(float(10))
+
+            if self.enable_visualizer:
+                visualizer.stop_visualization(api.visualizer_url,
+                                                self.app_id, data['visualizer_info'])
             monitor.stop_monitor(api.monitor_url, self.app_id)
             controller.stop_controller(api.controller_url, self.app_id)
-            print "stoped services"
+            print "Stoped services"
 
             # delete redis resources
-            time.sleep(float(30))
             if not self.get_application_state() == 'terminated':
                 k8s.delete_redis_resources(self.app_id)
 
