@@ -21,16 +21,7 @@ def start_visualization(visualizer_url, app_id, data):
 
     request_url = visualizer_url + '/visualizing/' + app_id
     headers = {'Content-type': 'application/json'}
-
-    visualizer_data = {}
-    visualizer_data['plugin'] = data['plugin']
-    visualizer_data['enable_visualizer'] = data['enable_visualizer']
-    visualizer_data['visualizer_plugin'] = data['visualizer_plugin']
-    visualizer_data['datasource_type'] = data['datasource_type']
-    if(visualizer_data['datasource_type'] == 'influxdb'):
-        visualizer_data['database_data'] = data['database_data']
-
-    visualizer_body = json.dumps(visualizer_data)
+    visualizer_body = json.dumps(data)
 
     requests.post(request_url, data=visualizer_body, headers=headers)
 

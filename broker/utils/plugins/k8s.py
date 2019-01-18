@@ -19,6 +19,7 @@ import redis
 
 from broker.service import api
 from influxdb import InfluxDBClient
+import requests
 
 def create_job(app_id, cmd, img, init_size, env_vars,
                config_id="", 
@@ -226,7 +227,7 @@ def terminate_job(app_id, namespace="default"):
 
     batch_v1 = kube.client.BatchV1Api()
     
-    delete = kube.client.V1DeleteOptions()
+    delete = kube.client.V1DeleteOptions(propagation_policy='Foreground')
 
     delete_redis_resources(app_id)
     batch_v1.delete_namespaced_job(
@@ -274,8 +275,8 @@ def create_influxdb(app_id, database_name="asperathos",
         "spec": {
             "ports": [{
                 "protocol": "TCP",
-                "port": 8086,
-                "targetPort": 8086
+                "port": visualizer_port,
+                "targetPort": visualizer_port
             }],
             "selector": {
                 "app": "influxdb-%s" % app_id

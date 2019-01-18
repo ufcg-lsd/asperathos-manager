@@ -49,6 +49,26 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 * **Error Response:**
   * **Code:** `400 BAD REQUEST` and `401 UNAUTHORIZED`<br />
 
+
+## Terminate submission
+  Terminate a running submission.
+
+* **URL**: `/submissions/:id/terminate`
+* **Method:** `PUT`
+
+* **JSON Request:**
+	* ```javascript
+	  {
+	     username : [string],
+	     password : [string]
+	  }
+	  ```
+* **Success Response:**
+  * **Code:** `204` <br />
+		
+* **Error Response:**
+  * **Code:** `400 BAD REQUEST` and `401 UNAUTHORIZED`<br />
+
 ## List submissions
   List all submissions.
 

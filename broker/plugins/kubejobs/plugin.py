@@ -56,6 +56,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             # TODO(clenimar): configure ``timeout`` via a request param,
             # e.g. api.redis_creation_timeout.
             redis_ip, redis_port = k8s.provision_redis_or_die(self.app_id)
+            #agent_port = k8s.create_cpu_agent(self.app_id)
 
             # inject REDIS_HOST in the environment
             data['env_vars']['REDIS_HOST'] = 'redis-%s' % self.app_id
@@ -87,13 +88,16 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
                 print "Creating Visualization plataform"
 
-                data['visualizer_info'].update({'enable_visualizer': data['enable_visualizer'],
+                data['visualizer_info'].update({
+                                         'enable_visualizer': data['enable_visualizer'],
                                          'plugin': data['monitor_plugin'],
-                                         'visualizer_plugin': data['visualizer_plugin']})
+                                         'visualizer_plugin': data['visualizer_plugin'],
+                                         'username' : data['username'],
+                                         'password': data['password']})
                 
                 visualizer.start_visualization(api.visualizer_url,
                                             self.app_id, data['visualizer_info'])
-
+                
                 self.visualizer_url = visualizer.get_visualizer_url(api.visualizer_url,
                                                                     self.app_id)
 
@@ -118,7 +122,9 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                                          'submission_time': starting_time,
                                          'redis_ip': redis_ip,
                                          'redis_port': redis_port,
-                                         'enable_visualizer': self.enable_visualizer})
+                                         'graphic_metrics': True,
+                                         'enable_visualizer': self.enable_visualizer})#,
+                                         #'cpu_agent_port': agent_port})
 
             monitor.start_monitor(api.monitor_url, self.app_id,
                                   data['monitor_plugin'],
