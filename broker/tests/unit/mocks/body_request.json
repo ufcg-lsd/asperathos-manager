@@ -1,0 +1,34 @@
+{
+    "username": "user",
+    "password": "psswrd",
+    "cmd": ["python", "app.py"],
+    "img": "ip:port/kubejobsapp:demo",
+    "init_size": 1,
+    "redis_workload": "http://test.test",
+    "monitor_plugin": "kubejobs",
+    "enable_visualizer": false,
+    "monitor_info": {
+        "expected_time": 500
+                     },
+    "visualizer_plugin": "k8s-grafana",
+    "visualizer_info": {
+            "datasource_type": "influxdb"
+        },
+    "env_vars": {
+        "S_USERNAME": "user",
+        "PASSWORD":"psswrd",
+        "AUTH_URL":"https://auth.com",
+        "PROJECT_ID":"00001",
+        "PROJECT_NAME": "project",
+        "PROJECT_DOMAIN_NAME":"domain",
+        "USER_DOMAIN_NAME":"domain",
+        "CONTAINER_NAME":"container"
+    },
+    "enable_visualizer":true,
+       "visualizer_plugin":"k8s-grafana",
+       "visualizer_info":{  
+          "datasource_type":"influxdb"
+    },
+    "config_id": 1,
+    "enable_auth": false
+} 

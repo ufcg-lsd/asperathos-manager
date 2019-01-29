@@ -22,7 +22,7 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
   * **Code:** `202` <br /> **Content:** 
 	  * ```javascript
 	    {
-	       id : [string]
+	       job_id : [string]
 	    }
 		```
 		
@@ -34,26 +34,6 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
   Stop a running submission.
 
 * **URL**: `/submissions/:id/stop`
-* **Method:** `PUT`
-
-* **JSON Request:**
-	* ```javascript
-	  {
-	     username : [string],
-	     password : [string]
-	  }
-	  ```
-* **Success Response:**
-  * **Code:** `204` <br />
-		
-* **Error Response:**
-  * **Code:** `400 BAD REQUEST` and `401 UNAUTHORIZED`<br />
-
-
-## Terminate submission
-  Terminate a running submission.
-
-* **URL**: `/submissions/:id/terminate`
 * **Method:** `PUT`
 
 * **JSON Request:**
@@ -81,7 +61,7 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 	       submission1 : {
 	          status: [string]
 	       },
-     	       ...
+     	   [...],
 	       submissionN : {
 	          status: [string]
 	       }		 
