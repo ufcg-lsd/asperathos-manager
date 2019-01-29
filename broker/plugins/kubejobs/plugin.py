@@ -162,6 +162,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
             # delete redis resources
             time.sleep(float(30))
+            #time.sleep(float(30))
             if not self.get_application_state() == 'terminated':
                 self.k8s.delete_redis_resources(self.app_id)
 
