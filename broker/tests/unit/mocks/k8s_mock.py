@@ -144,3 +144,17 @@ class MockKube():
     """
     def terminate_job(self, app_id):       
       self.jobs["default"].pop(app_id)
+
+    """ Function that simulates a InfluxDB creation.
+
+    Args:
+        app_id (string): Representing id of the application
+
+    Returns:
+        None
+    """
+    def create_influxdb(app_id, database_name="asperathos",
+                 img="influxdb", namespace="default", 
+                 visualizer_port=8086, timeout=60):
+        return {"port": 1234, "name": database_name}
+

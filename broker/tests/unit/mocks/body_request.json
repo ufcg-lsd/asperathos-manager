@@ -6,14 +6,9 @@
     "init_size": 1,
     "redis_workload": "http://test.test",
     "monitor_plugin": "kubejobs",
-    "enable_visualizer": false,
     "monitor_info": {
         "expected_time": 500
                      },
-    "visualizer_plugin": "k8s-grafana",
-    "visualizer_info": {
-            "datasource_type": "influxdb"
-        },
     "env_vars": {
         "S_USERNAME": "user",
         "PASSWORD":"psswrd",

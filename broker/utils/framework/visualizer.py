@@ -36,7 +36,7 @@ def stop_visualization(visualizer_url, app_id, data):
     visualizer_data['datasource_type'] = data['datasource_type']
     visualizer_body = json.dumps(visualizer_data)
 
-    requests.post(request_url, data=visualizer_body, headers=headers)
+    requests.put(request_url, data=visualizer_body, headers=headers)
 
 def get_visualizer_url(visualizer_url, app_id):
     

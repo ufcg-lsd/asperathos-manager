@@ -61,6 +61,10 @@ class TestKubeJobsPlugin(unittest.TestCase):
             m.post("http://0.0.0.0:5000/scaling/%s" % self.job1.app_id, text="")
             m.put("http://0.0.0.0:5000/scaling/%s/stop" % self.job1.app_id, text="")
 
+            m.post("http://0.0.0.0:5002/visualizing/%s" % self.job1.app_id, text="")
+            m.put("http://0.0.0.0:5002/visualizing/%s/stop" % self.job1.app_id, text="")
+            m.get("http://0.0.0.0:5002/visualizing/%s" % self.job1.app_id, text="{'url': 'http://mock.com'}")
+
             self.job1.rds = MockRedis()
 
             self.assertEqual(self.job1.get_application_state(), "created")
@@ -119,6 +123,10 @@ class TestKubeJobsPlugin(unittest.TestCase):
             m.post("http://0.0.0.0:5000/scaling/%s" % self.job2.app_id, text="")
             m.put("http://0.0.0.0:5000/scaling/%s/stop" % self.job2.app_id, text="")
 
+            m.post("http://0.0.0.0:5002/visualizing/%s" % self.job2.app_id, text="")
+            m.put("http://0.0.0.0:5002/visualizing/%s/stop" % self.job2.app_id, text="")
+            m.get("http://0.0.0.0:5002/visualizing/%s" % self.job2.app_id, text="{'url': 'http://mock.com'}")
+
             self.job2.rds = MockRedis()
 
             self.assertEqual(self.job2.get_application_state(), "created")
@@ -151,6 +159,10 @@ class TestKubeJobsPlugin(unittest.TestCase):
 
             m.post("http://0.0.0.0:5000/scaling/%s" % self.job2.app_id, text="")
             m.put("http://0.0.0.0:5000/scaling/%s/stop" % self.job2.app_id, text="")
+        
+            m.post("http://0.0.0.0:5002/visualizing/%s" % self.job2.app_id, text="")
+            m.put("http://0.0.0.0:5002/visualizing/%s/stop" % self.job2.app_id, text="")
+            m.get("http://0.0.0.0:5002/visualizing/%s" % self.job2.app_id, text="{'url': 'http://mock.com'}")
 
             self.job2.rds = MockRedis()
 
