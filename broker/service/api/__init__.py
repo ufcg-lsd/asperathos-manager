@@ -29,7 +29,6 @@ try:
     
     """ General configuration """
     host = config.get("general", "host")
-    print host
     port = config.getint('general', 'port')
     plugins = config.get('general', 'plugins').split(',')
 
