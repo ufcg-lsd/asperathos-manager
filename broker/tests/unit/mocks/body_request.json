@@ -19,7 +19,7 @@
         "USER_DOMAIN_NAME":"domain",
         "CONTAINER_NAME":"container"
     },
-    "enable_visualizer":true,
+    "enable_visualizer":false,
        "visualizer_plugin":"k8s-grafana",
        "visualizer_info":{  
           "datasource_type":"influxdb"
