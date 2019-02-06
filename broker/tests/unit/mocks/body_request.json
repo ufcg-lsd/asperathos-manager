@@ -1,24 +1,28 @@
 {
-    "bigsea_username": "user",
-    "bigsea_password": "psswrd",
+    "username": "user",
+    "password": "psswrd",
     "cmd": ["python", "app.py"],
     "img": "ip:port/kubejobsapp:demo",
     "init_size": 1,
     "redis_workload": "http://test.test",
     "monitor_plugin": "kubejobs",
-    "graphic_metrics": false,
     "monitor_info": {
-    "expected_time": 500
+        "expected_time": 500
                      },
     "env_vars": {
-    "S_USERNAME": "user",
-    "PASSWORD":"psswrd",
-    "AUTH_URL":"https://auth.com",
-    "PROJECT_ID":"00001",
-    "PROJECT_NAME": "project",
-    "PROJECT_DOMAIN_NAME":"domain",
-    "USER_DOMAIN_NAME":"domain",
-    "CONTAINER_NAME":"container"
+        "S_USERNAME": "user",
+        "PASSWORD":"psswrd",
+        "AUTH_URL":"https://auth.com",
+        "PROJECT_ID":"00001",
+        "PROJECT_NAME": "project",
+        "PROJECT_DOMAIN_NAME":"domain",
+        "USER_DOMAIN_NAME":"domain",
+        "CONTAINER_NAME":"container"
+    },
+    "enable_visualizer":false,
+       "visualizer_plugin":"k8s-grafana",
+       "visualizer_info":{  
+          "datasource_type":"influxdb"
     },
     "config_id": 1,
     "enable_auth": false

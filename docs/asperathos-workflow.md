@@ -1,4 +1,4 @@
-# BIGSEA Asperathos execution workflow
+# Asperathos execution workflow
 Before describing the adaptation policies architecture itself, Flow Image depicts the sequence of steps that represents a job submission using the Asperathos services.
 
 ![Flow Image](https://github.com/bigsea-ufcg/bigsea-manager/blob/refactor/docs/flow.png)

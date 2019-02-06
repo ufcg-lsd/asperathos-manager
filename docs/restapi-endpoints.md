@@ -22,7 +22,7 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
   * **Code:** `202` <br /> **Content:** 
 	  * ```javascript
 	    {
-	       id : [string]
+	       job_id : [string]
 	    }
 		```
 		
@@ -61,7 +61,7 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 	       submission1 : {
 	          status: [string]
 	       },
-     	       ...
+     	   [...],
 	       submissionN : {
 	          status: [string]
 	       }		 

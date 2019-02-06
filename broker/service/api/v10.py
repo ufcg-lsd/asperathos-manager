@@ -53,56 +53,50 @@ def run_submission(data):
         submission_id, executor = plugin.execute(data['plugin_info'])
         submissions[submission_id] = executor
 
-        return submission_id
+        return {"job_id": submission_id}
 
 
 def stop_submission(submission_id, data):
-    if 'username' not in data or 'password' not in data:
-        API_LOG.log("Missing parameters in request")
-        raise ex.BadRequestException()
-    
-    username = data['username']
-    password = data['password']
 
-    authorization = authorizer.get_authorization(api.authorization_url,
-                                                 username, password)
-
-    if not authorization['success']:
-        API_LOG.log("Unauthorized request")
-        raise ex.UnauthorizedException()
-
-    else:
-        if submission_id not in submissions.keys():
-            raise ex.BadRequestException()
-
-        # TODO: Call the executor by submission_id and stop the execution.
-
-        submissions[submission_id].stop_application()
-
-        return submissions[submission_id]
+    return end_submission(submission_id, data, False)
 
 def terminate_submission(submission_id, data):
+    
+    return end_submission(submission_id, data, True)
 
-    if 'username' not in data or 'password' not in data:
+def end_submission(submission_id, data, hard_finish):
+
+    if 'enable_auth' not in data:
         API_LOG.log("Missing parameters in request")
         raise ex.BadRequestException()
-    
-    username = data['username']
-    password = data['password']  
 
-    authorization = authorizer.get_authorization(api.authorization_url,
-                                                 username, password)
+    enable_auth = data['enable_auth'] 
 
-    if not authorization['success']:
-        API_LOG.log("Unauthorized request")
-        raise ex.UnauthorizedException()
-
-    else:
-        if submission_id not in submissions.keys():
-            API_LOG.log("Wrong request")
+    if enable_auth:
+        if 'username' not in data or 'password' not in data:
+            API_LOG.log("Missing parameters in request")
             raise ex.BadRequestException()
 
+        username = data['username']
+        password = data['password']
+
+        authorization = authorizer.get_authorization(api.authorization_url,
+                                                 username, password)
+                                            
+        if not authorization['success']:
+            API_LOG.log("Unauthorized request")
+            raise ex.UnauthorizedException()
+
+    if submission_id not in submissions.keys():
+        API_LOG.log("Wrong request")
+        raise ex.BadRequestException()
+
+    if(hard_finish):
         submissions[submission_id].terminate_job()
+    else:
+        submissions[submission_id].stop_application()
+
+    return {"job_id": submission_id}
 
 
 def list_submissions():
