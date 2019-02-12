@@ -19,7 +19,7 @@ import ConfigParser
 try:
     # Conf reading
     config = ConfigParser.RawConfigParser()
-    config.read('./broker.cfg')
+    config.read('./etc/broker.cfg')
     
     """ Services configuration """
     monitor_url = config.get('services', 'monitor_url')
