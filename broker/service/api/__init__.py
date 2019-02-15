@@ -14,7 +14,32 @@
 # limitations under the License.
 
 import ConfigParser
+import kubernetes as kube
 
+""" Gets the IP address of one a the node contained
+    in a Kubernetes cluster
+
+Raises:
+    Exception -- It was not possible to connect with the
+    Kubernetes cluster.
+
+Returns:
+    string -- The node IP
+"""
+
+def get_node_cluster(k8s_conf_path):
+
+    try:
+        kube.config.load_kube_config(k8s_conf_path)
+        CoreV1Api = kube.client.CoreV1Api()
+
+        node_info = CoreV1Api.list_node().items[0]
+        node_ip = node_info.status.addresses[0].address
+
+        return node_ip
+
+    except Exception:
+        print("Connection with the cluster %s was not successful" % k8s_conf_path)
 
 try:
     # Conf reading
@@ -39,10 +64,23 @@ try:
             raise Exception("plugin '%s' section missing" % plugin)
     
     if 'kubejobs' in plugins:
-        k8s_conf_path = config.get('kubejobs', 'k8s_conf_path')
-        count_queue = config.get('kubejobs', 'count_queue')
-        redis_ip = config.get('kubejobs', 'redis_ip')
 
+        # Setting default values for the necessary variables
+        k8s_conf_path = "./data/conf"
+    
+        # If explicitly stated in the cfg file, overwrite the variables
+        if(config.has_section('kubejobs')):
+
+            if(config.has_option('kubejobs', 'k8s_conf_path')):
+                k8s_conf_path = config.get('kubejobs', 'k8s_conf_path')
+            if(config.has_option('kubejobs', 'count_queue')):
+                count_queue = config.get('kubejobs', 'count_queue')
+            else:
+                count_queue = get_node_cluster(k8s_conf_path)
+            if(config.has_option('kubejobs', 'redis_ip')):
+                redis_ip = config.get('kubejobs', 'redis_ip')
+            else:
+                redis_ip = get_node_cluster(k8s_conf_path)
         
     if 'openstack_generic' in plugins:
         public_key = config.get('openstack_generic', 'public_key')

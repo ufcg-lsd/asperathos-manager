@@ -48,3 +48,49 @@ def get_visualizer_url(visualizer_url, app_id):
     url = (ast.literal_eval(response_data.text))['url']
 
     return url
+
+""" Requests the addition of a new cluster reference
+    in the Asperathos Visualizer component
+"""
+
+def add_cluster(visualizer_url, data):
+    request_url = visualizer_url + '/visualizing/cluster'
+    headers = {'Content-type': 'application/json'}
+
+    requests.post(request_url, data=json.dumps(data), headers=headers)
+
+""" Requests the addition of a certificate in a cluster reference
+    in the Asperathos Visualizer component
+"""
+def add_certificate(visualizer_url, cluster_name, data):
+    request_url = visualizer_url + '/visualizing/cluster/' + cluster_name + "/certificate" 
+    headers = {'Content-type': 'application/json'}
+
+    requests.post(request_url, data=json.dumps(data), headers=headers)
+
+""" Requests the deletion of a cluster reference
+    in the Asperathos Visualizer component
+"""
+def delete_cluster(visualizer_url, cluster_name, data):
+    request_url = visualizer_url + '/visualizing/cluster/' + cluster_name + "/delete"
+    headers = {'Content-type': 'application/json'}
+
+    requests.post(request_url, data=json.dumps(data), headers=headers)
+
+""" Requests the deletion of a certificate of a cluster reference
+    in the Asperathos Visualizer component
+"""
+def delete_certificate(visualizer_url, cluster_name, certificate_name, data):
+    request_url = visualizer_url + '/monitoring/cluster/' + cluster_name + "/certificate/" + certificate_name + "/delete"
+    headers = {'Content-type': 'application/json'}
+
+    requests.post(request_url, data=json.dumps(data), headers=headers)
+
+""" Turns a cluster reference active
+    in the Asperathos visualizer instance
+"""
+def active_cluster(visualizer_url, cluster_name, data):
+    request_url = visualizer_url + '/visualizing/cluster/' + cluster_name
+    headers = {'Content-type': 'application/json'}
+
+    requests.post(request_url, data=json.dumps(data), headers=headers)

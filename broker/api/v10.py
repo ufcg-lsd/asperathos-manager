@@ -78,3 +78,59 @@ def submission_status(submission_id):
 @rest.get('/submissions/<submission_id>/log')
 def submission_log(submission_id):
     return u.render(api.submission_log(submission_id))
+
+""" Return the visualizer URL of a specific submission.
+
+    Normal response codes: 200
+    Error response codes: 400
+"""
+
+@rest.get('/submissions/<submission_id>/visualizer')
+def submission_visualizer(submission_id):
+    return u.render(api.submission_visualizer(submission_id))
+
+""" Add a new cluster reference in the Asperathos section.
+
+    Normal response codes: 202
+    Error response codes: 400, 401
+"""
+@rest.post('/submissions/cluster')
+def add_cluster(data):
+    return u.render(api.add_cluster(data)) 
+
+""" Add a certificate to a cluster reference in the Asperathos section.
+
+    Normal response codes: 202
+    Error response codes: 400, 401
+"""
+@rest.post('/submissions/cluster/<cluster_name>/certificate')
+def add_certificate(cluster_name, data):
+    return u.render(api.add_certificate(cluster_name, data)) 
+
+""" Delete a certificate to a cluster reference in the Asperathos section.
+
+    Normal response codes: 202
+    Error response codes: 400, 401
+"""
+@rest.post('/submissions/cluster/<cluster_name>/certificate/<certificate_name>/delete')
+def delete_certificate(cluster_name, certificate_name, data):
+    return u.render(api.delete_certificate(cluster_name, certificate_name, data)) 
+
+""" Delete a cluster reference in the Asperathos section.
+
+    Normal response codes: 202
+    Error response codes: 400, 401
+"""
+@rest.post('/submissions/cluster/<cluster_name>/delete')
+def delete_cluster(cluster_name, data):
+    return u.render(api.delete_cluster(cluster_name, data)) 
+
+""" Start to use the informed cluster as active cluster
+    in the Asperathos section.
+                                                                              
+    Normal response codes: 200
+    Error response codes: 400
+"""
+@rest.post('/submissions/cluster/<cluster_name>')
+def active_cluster(cluster_name, data):
+    return u.render(api.active_cluster(cluster_name, data))

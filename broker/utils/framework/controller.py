@@ -54,3 +54,48 @@ def setup_environment(controller_url, instances, cap, data):
     data['actuator_plugin'] = data['scaling_parameters']['actuator']
    
     requests.post(setup_enviroment_url, data=json.dumps(data), headers=headers)
+
+""" Requests the addition of a new cluster reference
+    in the Asperathos Controller component
+"""
+def add_cluster(controller_url, data):
+    request_url = controller_url + '/cluster'
+    headers = {'Content-type': 'application/json'}
+
+    requests.post(request_url, data=json.dumps(data), headers=headers)
+
+""" Requests the addition of a certificate in a cluster reference
+    in the Asperathos Controller component
+"""
+def add_certificate(controller_url, cluster_name, data):
+    request_url = controller_url + '/cluster/' + cluster_name + "/certificate" 
+    headers = {'Content-type': 'application/json'}
+
+    requests.post(request_url, data=json.dumps(data), headers=headers)
+
+""" Requests the deletion of a cluster reference
+    in the Asperathos Controller component
+"""
+def delete_cluster(controller_url, cluster_name, data):
+    request_url = controller_url + '/cluster/' + cluster_name + "/delete"
+    headers = {'Content-type': 'application/json'}
+
+    requests.post(request_url, data=json.dumps(data), headers=headers)
+
+""" Requests the deletion of a certificate of a cluster reference
+    in the Asperathos Controller component
+"""
+def delete_certificate(controller_url, cluster_name, certificate_name, data):
+    request_url = controller_url + '/cluster/' + cluster_name + "/certificate/" + certificate_name + "/delete"
+    headers = {'Content-type': 'application/json'}
+
+    requests.post(request_url, data=json.dumps(data), headers=headers)
+
+""" Turns a cluster reference active
+    in the Asperathos Controller instance
+"""
+def active_cluster(controller_url, cluster_name, data):
+    request_url = controller_url + '/cluster/' + cluster_name
+    headers = {'Content-type': 'application/json'}
+
+    requests.post(request_url, data=json.dumps(data), headers=headers)

@@ -18,6 +18,7 @@ import threading
 import time
 import datetime
 import uuid
+import json
 
 from broker.plugins.base import GenericApplicationExecutor
 from broker.plugins import base
@@ -52,6 +53,9 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             jobs = requests.get(data['redis_workload']).text.\
                                 split('\n')[:-1]
 
+            # If the cluster name is informed in data, active the cluster
+            if('cluster_name' in data.keys()):
+                self.active_cluster(data)
 
             # Provision a redis database for the job. Die in case of error.
             # TODO(clenimar): configure ``timeout`` via a request param,
@@ -181,6 +185,16 @@ class KubeJobsExecutor(GenericApplicationExecutor):
     
     def stop_application(self):
         self.rds.delete("job")
+
+    """ When triggered, this function activate a specific cluster informed in 
+        the json file submitted by the user in all Asperathos components.
+    """
+    def active_cluster(self, data):
+        request_url = "http://%s:%s/submissions/cluster/%s" % (api.host, api.port, data['cluster_name'])
+        headers = {'Content-type': 'application/json'}
+        request_data = {'user': data['username'], 'password': data['password'], 'enable_auth': data['enable_auth']}
+        request_data = json.dumps(request_data)
+        requests.post(request_url, data=request_data, headers=headers)
 
 
 class KubeJobsProvider(base.PluginInterface):
