@@ -86,8 +86,14 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                 
                 if datasource_type == "influxdb":
                     database_data = k8s.create_influxdb(self.app_id)
-                    #TODO {javan} change name of redis_ip to node_ip in configuration file
-                    database_data.update({"url": api.redis_ip})
+                    
+                    # Gets the redis ip if the value is not explicit in the config file
+                    try:
+                        redis_ip = api.redis_ip
+                    except AttributeError:
+                        redis_ip = api.get_node_cluster(api.k8s_conf_path)
+
+                    database_data.update({"url": redis_ip})
                     data['monitor_info'].update({'database_data': database_data})
                     data['visualizer_info'].update({'database_data': database_data})
 

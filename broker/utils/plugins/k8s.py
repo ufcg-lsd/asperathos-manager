@@ -169,8 +169,11 @@ def provision_redis_or_die(app_id, namespace="default", redis_port=6379, timeout
 
     print("created redis Pod and Service: %s" % name)
 
-    # FIXME(clenimar): get node ip from k8s api instead of config
-    redis_ip = api.redis_ip
+    # Gets the redis ip if the value is not explicit in the config file
+    try:
+        redis_ip = api.redis_ip
+    except AttributeError:
+        redis_ip = api.get_node_cluster(api.k8s_conf_path)
 
     # wait until the redis instance is Ready
     # (ie. accessible via the Service)
@@ -287,6 +290,12 @@ def create_influxdb(app_id, database_name="asperathos",
 
     CoreV1Api = kube.client.CoreV1Api()
     node_port = None
+
+    # Gets the redis ip if the value is not explicitic in the config file
+    try:
+        redis_ip = api.redis_ip
+    except AttributeError:
+        redis_ip = api.get_node_cluster(api.k8s_conf_path)
     
     try:
         print("Creating InfluxDB Pod...")
@@ -304,7 +313,7 @@ def create_influxdb(app_id, database_name="asperathos",
             if read.status.phase == "Running" and node_port != None:
                 try:
                     #TODO change redis_ip to node_ip
-                    client = InfluxDBClient(api.redis_ip, node_port, 'root', 'root', database_name)
+                    client = InfluxDBClient(redis_ip, node_port, 'root', 'root', database_name)
                     client.create_database(database_name)
                     print("InfluxDB is ready!!")
                     ready = True
