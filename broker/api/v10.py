@@ -131,6 +131,27 @@ def delete_cluster(cluster_name, data):
     Normal response codes: 200
     Error response codes: 400
 """
-@rest.post('/submissions/cluster/<cluster_name>')
-def active_cluster(cluster_name, data):
-    return u.render(api.active_cluster(cluster_name, data))
+@rest.put('/submissions/cluster/<cluster_name>')
+def activate_cluster(cluster_name, data):
+    return u.render(api.activate_cluster(cluster_name, data))
+
+""" Get the list of usable clusters in a 
+    Asperathos Manager instance
+                                                                              
+    Normal response codes: 200
+    Error response codes: 400
+"""
+@rest.get('/submissions/cluster')
+def get_clusters():
+    return u.render(api.get_clusters())
+
+""" Get the current active cluster in a
+    Asperathos Manager instance
+                                                                              
+    Normal response codes: 200
+    Error response codes: 400
+"""
+@rest.get('/submissions/cluster/active')
+def get_activated_cluster():
+    return u.render(api.get_activated_cluster())
+

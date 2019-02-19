@@ -457,7 +457,7 @@ Returns:
     reason in case of 'failed' status
 """
 
-def active_cluster(cluster_name, data):
+def activate_cluster(cluster_name, data):
 
     if ('enable_auth' not in data):
         API_LOG.log("Missing parameters in request")
@@ -485,7 +485,7 @@ def active_cluster(cluster_name, data):
         monitor.active_cluster(api.monitor_url, cluster_name, data)
         visualizer.active_cluster(api.visualizer_url, cluster_name, data)
     except Exception:
-        API_LOG.log("Error while deleting the cluster into other components")
+        API_LOG.log("Error while activating the cluster into other components")
 
     conf_name = cluster_name
 
@@ -503,3 +503,38 @@ def active_cluster(cluster_name, data):
         reason = ""
 
     return {"cluster_name": conf_name, "status": status, "reason": reason}
+
+""" Get the list of usable clusters in the Asperathos Manager instance
+
+Returns:
+    dict -- Returns a dict with the cluster_name as key and
+    the cluster config content as value.
+"""
+def get_clusters():
+
+    response = {}
+    for root, dirs, files in os.walk("./data/clusters"):
+        for name in dirs:
+            cluster_file = open("./data/clusters/%s/%s" % (name, name), mode='r')
+            cluster_config = cluster_file.read()
+            response[name] = cluster_config
+    
+    return response
+
+""" Get the current active cluster in Asperathos Manager instance
+
+Returns:
+    dict -- Returns a dict with the cluster_name as key and
+    the cluster config content as value.
+"""
+def get_activated_cluster():
+    
+    response = {}
+    for root, dirs, files in os.walk("./data/clusters"):
+        for name in dirs:
+            if(filecmp.cmp("./data/clusters/%s/%s" % (name, name), api.k8s_conf_path)):
+                cluster_file = open("./data/clusters/%s/%s" % (name, name), mode='r')
+                cluster_config = cluster_file.read()
+                response[name] = cluster_config
+
+    return response
