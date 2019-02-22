@@ -71,7 +71,7 @@ class Rest(flask.Blueprint):
                     flask.request.status_code = status
 
                 try:
-                    if flask.request.method in ['POST', 'PUT', 'PATCH']:
+                    if flask.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
                         kwargs['data'] = request_data()
                     return func(**kwargs)
                 except ex.UnauthorizedException as e:

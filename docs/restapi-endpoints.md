@@ -104,6 +104,22 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 * **Error Response:**
   * **Code:** `400 BAD REQUEST` <br />
 
+## Get Visualizer url
+  Return the visualizer URL of a specific submission.
+
+* **URL**: `/submissions/:app_id/visualizer`
+* **Method:** `GET`
+* **Success Response:**
+  * **Code:** `200` <br /> **Content:** 
+	  * ```javascript
+	    {
+			visualizer_url: [string]
+		}
+		```
+		
+* **Error Response:**
+  * **Code:** `400 BAD REQUEST` <br />
+
 ## Add cluster
   Add a new cluster reference into the Asperathos section
 
@@ -130,7 +146,7 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 ## Add certificate
   Add a certificate in the a cluster reference into the Asperathos section
 
-* **URL**: `/submissions/cluster/:cluster_name`
+* **URL**: `/submissions/cluster/:cluster_name/certificate`
 * **Method:** `POST`
 * **JSON Request:**
 	* ```javascript
@@ -154,7 +170,7 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 ## Delete cluster
   Delete a cluster reference of the Asperathos section
 
-* **URL**: `/submissions/cluster/:app_id/delete`
+* **URL**: `/submissions/cluster/:cluster_name/delete`
 * **Method:** `POST`
 * **JSON Request:**
 	* ```javascript
@@ -197,7 +213,7 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 ## Active cluster
   Start to use the informed cluster as active cluster in the Asperathos section.
 
-* **URL**: `/submissions/cluster/:app_id`
+* **URL**: `/submissions/cluster/:cluster_name`
 * **Method:** `PUT`
 * **JSON Request:**
 	* ```javascript
@@ -205,15 +221,6 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 			"user" : [string],
 			"password" : [string]
 		}
-* **Success Response:**
-  * **Code:** `220` <br /> **Content:** 
-	  * ```javascript
-	    {
-			"cluster_name" : [string],
-			"status": [string],
-			"reason": [string]
-	    }
-		```
 
 ## Get clusters
   List all clusters added in a Asperathos instance.
@@ -224,13 +231,27 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
   * **Code:** `200` <br /> **Content:** 
 	  * ```javascript
 	    {
-	       cluster1 : cluster1-content [string],
-     	   [...],
-	       clusterN : cluster2-content [string]		 
-	    }
+    		"cluster1": {
+        	"active": false,
+        	"conf_content": "cluster1-content"
+    		},
+    		"cluster2": {
+        	"certificate1": "cert1-content",
+					"certificate2": "cert2-content",
+					"certificateN": "certN-content",
+        	"active": true,
+        	"conf_content": "cluster2-content"
+    		},
+				[...]
+				,
+    		"clusterN": {
+        	"active": false,
+        	"conf_content": "clusterN-content"
+    		}
+			}
 		```
 
-## Get activated clusters
+## Get activated cluster
   Get the current activated cluster in a Asperathos instance.
 
 * **URL**: `/submissions/cluster/active`
@@ -239,6 +260,10 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
   * **Code:** `200` <br /> **Content:** 
 	  * ```javascript
 	    {
-	       cluster_activated : cluster_activated-content [string]	 
-	    }
+    		"cluster-activated": {
+        	"active": true,
+        	"conf_content": "cluster-content",
+					"certificate": "certificate-content"
+    		}
+			}
 		```

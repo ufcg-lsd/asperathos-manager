@@ -16,6 +16,8 @@
 import ConfigParser
 import kubernetes as kube
 
+CONFIG_PATH = "./data/conf"
+
 try:
     # Conf reading
     config = ConfigParser.RawConfigParser()
@@ -41,7 +43,7 @@ try:
     if 'kubejobs' in plugins:
 
         # Setting default values for the necessary variables
-        k8s_conf_path = "./data/conf"
+        k8s_conf_path = CONFIG_PATH
     
         # If explicitly stated in the cfg file, overwrite the variables
         if(config.has_section('kubejobs')):
@@ -109,8 +111,11 @@ except Exception as e:
     print "Error: %s" % e.message
     quit()
 
-""" Gets the IP address of one a the node contained
-    in a Kubernetes cluster
+""" Gets the IP address of one slave node contained
+    in a Kubernetes cluster. The k8s API aways returns information
+    about the master node followed by the information of the slaves.   
+    Therefore, in order to avoid get the IP of the master node, 
+    this function always get the last node listed by the API.
 
     Raises:
         Exception -- It was not possible to connect with the
@@ -119,7 +124,6 @@ except Exception as e:
     Returns:
         string -- The node IP
     """
-
 def get_node_cluster(k8s_conf_path):
     try:
         kube.config.load_kube_config(k8s_conf_path)

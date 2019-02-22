@@ -28,11 +28,13 @@ from broker.utils.framework import controller
 from broker.utils.framework import monitor
 from broker import exceptions as ex
 
-
 API_LOG = Log("APIv10", "logs/APIv10.log")
 
 submissions = {}
+clusters = {}
+activated_cluster = None
 
+CLUSTER_CONF_PATH = "./data/clusters"
 
 def run_submission(data):
     if ('plugin' not in data or 'plugin_info' not in data):
@@ -76,26 +78,7 @@ def terminate_submission(submission_id, data):
 
 def end_submission(submission_id, data, hard_finish):
 
-    if 'enable_auth' not in data:
-        API_LOG.log("Missing parameters in request")
-        raise ex.BadRequestException()
-
-    enable_auth = data['enable_auth'] 
-
-    if enable_auth:
-        if 'username' not in data or 'password' not in data:
-            API_LOG.log("Missing parameters in request")
-            raise ex.BadRequestException()
-
-        username = data['username']
-        password = data['password']
-
-        authorization = authorizer.get_authorization(api.authorization_url,
-                                                 username, password)
-                                            
-        if not authorization['success']:
-            API_LOG.log("Unauthorized request")
-            raise ex.UnauthorizedException()
+    check_authorization(data)
 
     if submission_id not in submissions.keys():
         API_LOG.log("Wrong request")
@@ -198,6 +181,7 @@ def submission_visualizer(submission_id):
         visualizer_url = visualizer.get_visualizer_url(api.visualizer_url, submission_id)
     else:
         API_LOG.log("There is no process running in the Visualizer address")
+        raise ex.BadRequestException("There is no process running in the Visualizer address")
 
     return {"visualizer_url": visualizer_url}
 
@@ -209,59 +193,32 @@ Raises:
     ex.UnauthorizedException -- Wrong authentication variables informed
 
 Returns:
-    dict -- Returns a dict with the cluster_name, 
-    the status of the addition (success or failed) and a
-    reason in case of 'failed' status
+    dict -- Returns a dict with the cluster_name and
+    the status of the addition
 """
-
 def add_cluster(data):
     if ('cluster_name' not in data or 'cluster_config' not in data):
         API_LOG.log("Missing cluster fields in request")
         raise ex.BadRequestException("Missing cluster fields in request")
 
-    if ('enable_auth' not in data):
-        API_LOG.log("Missing parameters in request")
-        raise ex.BadRequestException()
-
-    enable_auth = data['enable_auth'] 
-
-    if enable_auth:
-        if 'username' not in data or 'password' not in data:
-            API_LOG.log("Missing parameters in request")
-            raise ex.BadRequestException()
-
-        username = data['username']
-        password = data['password']
-
-        authorization = authorizer.get_authorization(api.authorization_url,
-                                                 username, password)
-                                            
-        if not authorization['success']:
-            API_LOG.log("Unauthorized request")
-            raise ex.UnauthorizedException()
-
-    try:
-        controller.add_cluster(api.controller_url, data)
-        monitor.add_cluster(api.monitor_url, data)
-        visualizer.add_cluster(api.visualizer_url, data)
-    except Exception:
-        API_LOG.log("Error while adding the cluster in the other components")
+    check_authorization(data)
 
     conf_name = data['cluster_name']
     conf_content = data['cluster_config']
 
-    if(os.path.isfile("./data/clusters/%s/%s" % (conf_name, conf_name))):
-        status = "failed"
-        reason = "cluster already exists"
+    if(os.path.isfile("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name))):
+        API_LOG.log("Cluster already exists in this Asperathos instance!")
+        raise ex.BadRequestException("Cluster already exists in this Asperathos instance!")
     else:
-        os.makedirs("./data/clusters/%s" % (conf_name))
-        conf_file = open("./data/clusters/%s/%s" % (conf_name, conf_name), "w")
+        clusters[conf_name] = {'conf_content': conf_content}
+        clusters[conf_name]['active'] = False
+        os.makedirs("%s/%s" % (CLUSTER_CONF_PATH, conf_name))
+        conf_file = open("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name), "w")
         conf_file.write(conf_content)
         conf_file.close()
         status = "success"
-        reason = ""
 
-    return {"cluster_name": conf_name, "status": status, "reason": reason}
+    return {"cluster_name": conf_name, "status": status}
 
 
 """ Add a certificate to a cluster that can be choose to be the active
@@ -272,62 +229,37 @@ Raises:
     ex.UnauthorizedException -- Wrong authentication variables informed
 
 Returns:
-    dict -- Returns a dict with the cluster_name, certificate_name, 
-    the status of the addition (success or failed) and a
-    reason in case of 'failed' status
+    dict -- Returns a dict with the cluster_name, certificate_name and
+    the status of the addition
 """
-
 def add_certificate(cluster_name, data):
+
     if ('certificate_name' not in data or 'certificate_content' not in data):
         API_LOG.log("Missing fields in request")
         raise ex.BadRequestException("Missing fields in request")
 
-    if ('enable_auth' not in data):
-        API_LOG.log("Missing parameters in request")
-        raise ex.BadRequestException()
-
-    enable_auth = data['enable_auth'] 
-
-    if enable_auth:
-        if 'username' not in data or 'password' not in data:
-            API_LOG.log("Missing parameters in request")
-            raise ex.BadRequestException()
-
-        username = data['username']
-        password = data['password']
-
-        authorization = authorizer.get_authorization(api.authorization_url,
-                                                 username, password)
-                                            
-        if not authorization['success']:
-            API_LOG.log("Unauthorized request")
-            raise ex.UnauthorizedException()
-
-    try:
-        controller.add_certificate(api.controller_url, cluster_name, data)
-        monitor.add_certificate(api.monitor_url, cluster_name, data)
-        visualizer.add_certificate(api.visualizer_url, cluster_name, data)
-    except Exception:
-        API_LOG.log("Error while adding the certificate in the other components")
+    check_authorization(data)
 
     certificate_name = data['certificate_name']
     certificate_content = data['certificate_content']
 
-    if(os.path.isdir("./data/clusters/%s" % (cluster_name))):
-        if(os.path.isfile("./data/clusters/%s/%s" % (cluster_name, certificate_name))):
-            status = "failed"
-            reason = "certificate already exists"
+    if(os.path.isdir("%s/%s" % (CLUSTER_CONF_PATH, cluster_name))):
+        if(os.path.isfile("%s/%s/%s" % (CLUSTER_CONF_PATH, cluster_name, certificate_name))):
+            API_LOG.log("Certificate already exists in this Asperathos instance!")
+            raise ex.BadRequestException("Certificate already exists in this Asperathos instance!")
         else:
-            certificate_file = open("./data/clusters/%s/%s" % (cluster_name, certificate_name), "w")
+            certificate_file = open("%s/%s/%s" % (CLUSTER_CONF_PATH, cluster_name, certificate_name), "w")
             certificate_file.write(certificate_content)
             certificate_file.close()
-            status = "success"
-            reason = ""
-    else:
-        status = "failed"
-        reason = "cluster does not exists"
 
-    return {"cluster_name": cluster_name, "certificate_name": certificate_name, "status": status, "reason": reason}
+            clusters[cluster_name][certificate_name] = certificate_content
+
+            status = "success"
+    else:
+        API_LOG.log("Cluster does not exists in this Asperathos instance!")
+        raise ex.BadRequestException("Cluster does not exists in this Asperathos instance!")
+
+    return {"cluster_name": cluster_name, "certificate_name": certificate_name, "status": status}
 
 """ Delete a certificate to a cluster that can be choose to be the active
    cluster in the Asperathos section in execution time.
@@ -337,53 +269,28 @@ Raises:
     ex.UnauthorizedException -- Authetication problem
 
 Returns:
-    dict -- Returns a dict with the cluster_name, certificate_name, 
-    the status of the deletion (success or failed) and a
-    reason in case of 'failed' status
+    dict -- Returns a dict with the cluster_name, certificate_name and 
+    the status of the deletion
 """
 def delete_certificate(cluster_name, certificate_name, data):
 
-    if ('enable_auth' not in data):
-        API_LOG.log("Missing parameters in request")
-        raise ex.BadRequestException()
+    check_authorization(data)
 
-    enable_auth = data['enable_auth']
+    if(os.path.isdir("%s/%s" % (CLUSTER_CONF_PATH, cluster_name))):
+        if(os.path.isfile("%s/%s/%s" % (CLUSTER_CONF_PATH, cluster_name, certificate_name))):
+            os.remove("%s/%s/%s" % (CLUSTER_CONF_PATH, cluster_name, certificate_name))
 
-    if enable_auth:
-        if 'username' not in data or 'password' not in data:
-            API_LOG.log("Missing parameters in request")
-            raise ex.BadRequestException()
+            del clusters[cluster_name][certificate_name]
 
-        username = data['username']
-        password = data['password']
-
-        authorization = authorizer.get_authorization(api.authorization_url,
-                                                 username, password)
-                                            
-        if not authorization['success']:
-            API_LOG.log("Unauthorized request")
-            raise ex.UnauthorizedException()
-    
-    try:
-        controller.delete_cluster(api.controller_url, cluster_name, certificate_name, data)
-        monitor.delete_cluster(api.monitor_url, cluster_name, certificate_name, data)
-        visualizer.delete_cluster(api.visualizer_url, cluster_name, certificate_name, data)
-    except Exception:
-        API_LOG.log("Error while deleting the certificate in the other components")
-
-    if(os.path.isdir("./data/clusters/%s" % (cluster_name))):
-        if(os.path.isfile("./data/clusters/%s/%s" % (cluster_name, certificate_name))):
-            os.remove("./data/clusters/%s/%s" % (cluster_name, certificate_name))
             status = "success"
-            reason = ""
         else:
-            status = "failed"
-            reason = "certificate does not exists."
+            API_LOG.log("Certificate does not exists in this Asperathos instance!")
+            raise ex.BadRequestException("Certificate does not exists in this Asperathos instance!")
     else:
-        status = "failed"
-        reason = "cluster does not exists."
+        API_LOG.log("Cluster does not exists in this Asperathos instance!")
+        raise ex.BadRequestException("Cluster does not exists in this Asperathos instance!")
 
-    return {"cluster_name": cluster_name, "certificate_name": certificate_name, "status": status, "reason": reason}
+    return {"cluster_name": cluster_name, "certificate_name": certificate_name, "status": status}
 
 """ Delete a cluster that could be choose to be the active
     cluster in the Asperathos section in execution time.
@@ -393,11 +300,96 @@ Raises:
     ex.UnauthorizedException -- Authetication problem
 
 Returns:
-    dict -- Returns a dict with the cluster_name, 
-    the status of the activation (success or failed) and a
-    reason in case of 'failed' status
+    dict -- Returns a dict with the cluster_name and 
+    the status of the activation
 """
 def delete_cluster(cluster_name, data):
+
+    check_authorization(data)
+
+    conf_name = cluster_name
+
+    if(not os.path.isfile("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name))):
+        API_LOG.log("Cluster does not exists in this Asperathos instance!")
+        raise ex.BadRequestException("Cluster does not exists in this Asperathos instance!")
+    else:
+        # Check if the cluster to be deleted is the currently active
+        # if True, empty the config file currently being used.
+        if(filecmp.cmp("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name), api.k8s_conf_path)):
+            open(api.k8s_conf_path, 'w').close()
+
+        shutil.rmtree("%s/%s/" % (CLUSTER_CONF_PATH, conf_name))
+
+        del clusters[cluster_name]
+
+        status = "success"
+
+    return {"cluster_name": conf_name, "status": status}
+
+""" Activate a cluster to be used in a Asperathos section
+
+Raises:
+    ex.BadRequestException -- Missing parameters in request
+    ex.UnauthorizedException -- Authetication problem
+
+Returns:
+    dict -- Returns a dict with the cluster_name and 
+    the status of the activation
+"""
+def activate_cluster(cluster_name, data):
+
+    check_authorization(data)
+
+    global activated_cluster
+    conf_name = cluster_name
+
+    if(not os.path.isfile("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name))):
+        API_LOG.log("Cluster does not exists in this Asperathos instance!")
+        raise ex.BadRequestException("Cluster does not exists in this Asperathos instance!")
+    elif(cluster_name == activated_cluster):
+        API_LOG.log("Cluster already activated in this Asperathos instance!")
+        raise ex.BadRequestException("Cluster already activated in this Asperathos instance!")
+    else:
+        shutil.copyfile("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name), api.k8s_conf_path)
+        status = "success"
+        clusters[cluster_name]['active'] = True
+
+        # If any cluster was already activated, deactivate it
+        if(activated_cluster != None):
+            clusters[activated_cluster]['active'] = False
+
+        # Update the new activate cluster   
+        activated_cluster = cluster_name
+
+    return {"cluster_name": conf_name, "status": status}
+
+""" Get the list of usable clusters in the Asperathos Manager instance
+
+Returns:
+    dict -- Returns a dict with the cluster_name as key and
+    the cluster config content as value.
+"""
+def get_clusters():
+    return clusters
+    
+""" Get the current active cluster in Asperathos Manager instance
+
+Returns:
+    dict -- Returns a dict with the cluster_name as key and
+    the cluster config content as value.
+"""
+def get_activated_cluster():
+
+    global activated_cluster
+    return {activated_cluster : clusters[activated_cluster]}
+    
+""" Checks the user's need to authenticate to Asperathos
+
+Raises:
+    ex.BadRequestException -- Missing parameters in request
+    ex.UnauthorizedException -- Unauthorized request
+"""
+def check_authorization(data):
 
     if ('enable_auth' not in data):
         API_LOG.log("Missing parameters in request")
@@ -419,122 +411,3 @@ def delete_cluster(cluster_name, data):
         if not authorization['success']:
             API_LOG.log("Unauthorized request")
             raise ex.UnauthorizedException()
-    
-    try:
-        controller.delete_cluster(api.controller_url, cluster_name, data)
-        monitor.delete_cluster(api.monitor_url, cluster_name, data)
-        visualizer.delete_cluster(api.visualizer_url, cluster_name, data)
-    except Exception:
-        API_LOG.log("Error while deleting the cluster in the other components")
-
-    conf_name = cluster_name
-
-    if(not os.path.isfile("./data/clusters/%s/%s" % (conf_name, conf_name))):
-        status = "failed"
-        reason = "cluster does not exists in this Asperathos section"
-    else:
-        # Check if the cluster to be deleted is the currently active
-        # if True, empty the config file currently being used.
-        if(filecmp.cmp("./data/clusters/%s/%s" % (conf_name, conf_name), api.k8s_conf_path)):
-            open(api.k8s_conf_path, 'w').close()
-
-        shutil.rmtree("./data/clusters/%s/" % (conf_name))
-
-        status = "success"
-        reason = ""
-
-    return {"cluster_name": conf_name, "status": status, "reason": reason}
-
-""" Activate a cluster to be used in a Asperathos section
-
-Raises:
-    ex.BadRequestException -- Missing parameters in request
-    ex.UnauthorizedException -- Authetication problem
-
-Returns:
-    dict -- Returns a dict with the cluster_name, 
-    the status of the activation (success or failed) and a
-    reason in case of 'failed' status
-"""
-
-def activate_cluster(cluster_name, data):
-
-    if ('enable_auth' not in data):
-        API_LOG.log("Missing parameters in request")
-        raise ex.BadRequestException()
-
-    enable_auth = data['enable_auth'] 
-
-    if enable_auth:
-        if 'username' not in data or 'password' not in data:
-            API_LOG.log("Missing parameters in request")
-            raise ex.BadRequestException()
-
-        username = data['username']
-        password = data['password']
-
-        authorization = authorizer.get_authorization(api.authorization_url,
-                                                 username, password)
-                                            
-        if not authorization['success']:
-            API_LOG.log("Unauthorized request")
-            raise ex.UnauthorizedException()
-
-    try:
-        controller.active_cluster(api.controller_url, cluster_name, data)
-        monitor.active_cluster(api.monitor_url, cluster_name, data)
-        visualizer.active_cluster(api.visualizer_url, cluster_name, data)
-    except Exception:
-        API_LOG.log("Error while activating the cluster into other components")
-
-    conf_name = cluster_name
-
-    if(not os.path.isfile("./data/clusters/%s/%s" % (conf_name, conf_name))):
-        status = "failed"
-        reason = "cluster does not exists in this Asperathos section"
-    else:
-
-        with open("./data/clusters/%s/%s" % (conf_name, conf_name), 'r') as f:
-            with open(api.k8s_conf_path, 'w') as f1:
-                for line in f:
-                    f1.write(line) 
-        
-        status = "success"
-        reason = ""
-
-    return {"cluster_name": conf_name, "status": status, "reason": reason}
-
-""" Get the list of usable clusters in the Asperathos Manager instance
-
-Returns:
-    dict -- Returns a dict with the cluster_name as key and
-    the cluster config content as value.
-"""
-def get_clusters():
-
-    response = {}
-    for root, dirs, files in os.walk("./data/clusters"):
-        for name in dirs:
-            cluster_file = open("./data/clusters/%s/%s" % (name, name), mode='r')
-            cluster_config = cluster_file.read()
-            response[name] = cluster_config
-    
-    return response
-
-""" Get the current active cluster in Asperathos Manager instance
-
-Returns:
-    dict -- Returns a dict with the cluster_name as key and
-    the cluster config content as value.
-"""
-def get_activated_cluster():
-    
-    response = {}
-    for root, dirs, files in os.walk("./data/clusters"):
-        for name in dirs:
-            if(filecmp.cmp("./data/clusters/%s/%s" % (name, name), api.k8s_conf_path)):
-                cluster_file = open("./data/clusters/%s/%s" % (name, name), mode='r')
-                cluster_config = cluster_file.read()
-                response[name] = cluster_config
-
-    return response

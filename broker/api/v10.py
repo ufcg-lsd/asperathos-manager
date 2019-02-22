@@ -15,10 +15,11 @@
 
 from broker.utils import api as u
 from broker.service.api import v10 as api
-
+from flask_cors import CORS
 
 rest = u.Rest('v10', __name__)
 
+CORS(rest, expose_headers='Authorization')
 
 """ Run a new submission and returns a submission id.
 
@@ -112,7 +113,7 @@ def add_certificate(cluster_name, data):
     Normal response codes: 202
     Error response codes: 400, 401
 """
-@rest.post('/submissions/cluster/<cluster_name>/certificate/<certificate_name>/delete')
+@rest.delete('/submissions/cluster/<cluster_name>/certificate/<certificate_name>/delete')
 def delete_certificate(cluster_name, certificate_name, data):
     return u.render(api.delete_certificate(cluster_name, certificate_name, data)) 
 
@@ -121,7 +122,7 @@ def delete_certificate(cluster_name, certificate_name, data):
     Normal response codes: 202
     Error response codes: 400, 401
 """
-@rest.post('/submissions/cluster/<cluster_name>/delete')
+@rest.delete('/submissions/cluster/<cluster_name>/delete')
 def delete_cluster(cluster_name, data):
     return u.render(api.delete_cluster(cluster_name, data)) 
 
@@ -131,7 +132,7 @@ def delete_cluster(cluster_name, data):
     Normal response codes: 200
     Error response codes: 400
 """
-@rest.put('/submissions/cluster/<cluster_name>')
+@rest.put('/submissions/cluster/<cluster_name>/activate')
 def activate_cluster(cluster_name, data):
     return u.render(api.activate_cluster(cluster_name, data))
 
@@ -151,7 +152,6 @@ def get_clusters():
     Normal response codes: 200
     Error response codes: 400
 """
-@rest.get('/submissions/cluster/active')
+@rest.get('/submissions/cluster/activate')
 def get_activated_cluster():
     return u.render(api.get_activated_cluster())
-

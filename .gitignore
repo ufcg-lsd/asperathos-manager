@@ -16,3 +16,4 @@ manager.cfg.lsd
 *.lsd.ufcg.edu.br.txt
 /logs
 data/conf
+data/clusters
