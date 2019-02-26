@@ -76,6 +76,9 @@ def terminate_submission(submission_id, data):
     
     return end_submission(submission_id, data, True)
 
+def submission_errors(submission_id):
+    return submissions[submission_id].errors()
+
 def end_submission(submission_id, data, hard_finish):
 
     check_authorization(data)

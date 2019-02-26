@@ -70,6 +70,14 @@ def list_submissions():
 def submission_status(submission_id):
     return u.render(api.submission_status(submission_id))
 
+""" Show the errors in an execution.
+
+    Normal response codes: 200
+    Error response codes: 400, 401
+"""
+@rest.get('/submissions/<submission_id>/errors')
+def submission_errors(submission_id):
+    return u.render(api.submission_errors(submission_id))
 
 """ Show log of a specific submission.
                                                                               
