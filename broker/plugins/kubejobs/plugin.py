@@ -181,6 +181,9 @@ class KubeJobsExecutor(GenericApplicationExecutor):
     
     def stop_application(self):
         self.rds.delete("job")
+    
+    def errors(self):
+        return self.rds.lrange("job:errors", 0, -1)
 
 
 class KubeJobsProvider(base.PluginInterface):
