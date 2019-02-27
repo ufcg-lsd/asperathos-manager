@@ -310,12 +310,14 @@ def delete_cluster(cluster_name, data):
 
     check_authorization(data)
 
+    global activated_cluster
     conf_name = cluster_name
 
     if(not os.path.isfile("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name))):
         API_LOG.log("Cluster does not exists in this Asperathos instance!")
         raise ex.BadRequestException("Cluster does not exists in this Asperathos instance!")
     else:
+        
         # Check if the cluster to be deleted is the currently active
         # if True, empty the config file currently being used.
         if(filecmp.cmp("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name), api.k8s_conf_path)):
@@ -324,6 +326,10 @@ def delete_cluster(cluster_name, data):
         shutil.rmtree("%s/%s/" % (CLUSTER_CONF_PATH, conf_name))
 
         del clusters[cluster_name]
+
+        # If this cluster is the active one, clear the activate cluster variable
+        if(cluster_name == activated_cluster):
+            activated_cluster = None
 
         status = "success"
 
