@@ -19,6 +19,9 @@ import redis
 
 from broker.service import api
 from influxdb import InfluxDBClient
+from broker.utils.logger import Log
+
+KUBEJOBS_LOG = Log("KubeJobsPlugin", "logs/kubejobs.log")
 import requests
 
 def create_job(app_id, cmd, img, init_size, env_vars,
@@ -157,17 +160,17 @@ def provision_redis_or_die(app_id, namespace="default", redis_port=6379, timeout
     node_port = None
     try:
         # TODO(clenimar): improve logging
-        print("creating pod...")
+        KUBEJOBS_LOG.log("creating pod...")
         CoreV1Api.create_namespaced_pod(
             namespace=namespace, body=redis_pod_spec)
-        print("creating service...")
+        KUBEJOBS_LOG.log("creating service...")
         s = CoreV1Api.create_namespaced_service(
             namespace=namespace, body=redis_svc_spec)
         node_port = s.spec.ports[0].node_port
     except kube.client.rest.ApiException as e:
-        print(e)
+        KUBEJOBS_LOG.log(e)
 
-    print("created redis Pod and Service: %s" % name)
+    KUBEJOBS_LOG.log("created redis Pod and Service: %s" % name)
 
     # Gets the redis ip if the value is not explicit in the config file
     try:
@@ -182,22 +185,22 @@ def provision_redis_or_die(app_id, namespace="default", redis_port=6379, timeout
     start = time.time()
     while time.time() - start < timeout:
         time.sleep(5)
-        print("trying redis on %s:%s..." % (redis_ip, node_port))
+        KUBEJOBS_LOG.log("trying redis on %s:%s..." % (redis_ip, node_port))
         try:
             r = redis.StrictRedis(host=redis_ip, port=node_port)
             if r.info()['loading'] == 0:
                 redis_ready = True
-                print("connected to redis on %s:%s!" % (redis_ip, node_port))
+                KUBEJOBS_LOG.log("connected to redis on %s:%s!" % (redis_ip, node_port))
                 break
         except redis.exceptions.ConnectionError:
-            print("redis is not ready yet")
+            KUBEJOBS_LOG.log("redis is not ready yet")
 
     if redis_ready:
         return redis_ip, node_port
     else:
-        print("timed out waiting for redis to be available.")
-        print("redis address: %s:%d" % (name, node_port))
-        print("clean resources and die!")
+        KUBEJOBS_LOG.log("timed out waiting for redis to be available.")
+        KUBEJOBS_LOG.log("redis address: %s:%d" % (name, node_port))
+        KUBEJOBS_LOG.log("clean resources and die!")
         delete_redis_resources(app_id=app_id)
         # die!
         raise Exception("Could not provision redis")
@@ -215,7 +218,7 @@ def delete_redis_resources(app_id, namespace="default"):
 
     CoreV1Api = kube.client.CoreV1Api()
 
-    print("deleting redis resources for job %s" % app_id)
+    KUBEJOBS_LOG.log("deleting redis resources for job %s" % app_id)
     name = "redis-%s" % app_id
     # create generic ``V1DeleteOptions``
     delete = kube.client.V1DeleteOptions()
@@ -298,10 +301,10 @@ def create_influxdb(app_id, database_name="asperathos",
         redis_ip = api.get_node_cluster(api.k8s_conf_path)
     
     try:
-        print("Creating InfluxDB Pod...")
+        KUBEJOBS_LOG.log("Creating InfluxDB Pod...")
         CoreV1Api.create_namespaced_pod(
             namespace=namespace, body=influx_pod_spec)
-        print("Creating InfluxDB Service...") 
+        KUBEJOBS_LOG.log("Creating InfluxDB Service...") 
         s = CoreV1Api.create_namespaced_service(
             namespace=namespace, body=influx_svc_spec)
         ready = False
@@ -315,10 +318,10 @@ def create_influxdb(app_id, database_name="asperathos",
                     #TODO change redis_ip to node_ip
                     client = InfluxDBClient(redis_ip, node_port, 'root', 'root', database_name)
                     client.create_database(database_name)
-                    print("InfluxDB is ready!!")
+                    KUBEJOBS_LOG.log("InfluxDB is ready!!")
                     ready = True
                 except Exception as e:
-                    print("InfluxDB is not ready yet...")
+                    KUBEJOBS_LOG.log("InfluxDB is not ready yet...")
             else:
                 attempts -= 1
                 if attempts > 0: 
@@ -329,4 +332,4 @@ def create_influxdb(app_id, database_name="asperathos",
         influxdb_data = {"port": node_port, "name": database_name}
         return influxdb_data
     except kube.client.rest.ApiException as e:
-        print(e)
+        KUBEJOBS_LOG.log(e)

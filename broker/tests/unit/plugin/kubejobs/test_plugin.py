@@ -38,8 +38,10 @@ class TestKubeJobsPlugin(unittest.TestCase):
         
         self.job1 = KubeJobsExecutor("kj-000001")
         self.job1.k8s = MockKube("kj-000001")
+	self.job1.waiting_time = 0
         self.job2 = KubeJobsExecutor("kj-000002")
         self.job2.k8s = MockKube("kj-000002")
+	self.job2.waiting_time = 0
 
         with open('broker/tests/unit/mocks/body_request.json') as f:
             self.jsonRequest = json.load(f)

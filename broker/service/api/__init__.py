@@ -15,7 +15,9 @@
 
 import ConfigParser
 import kubernetes as kube
+from broker.utils.logger import Log
 
+API_LOG = Log("APIv10", "logs/APIv10.log")
 CONFIG_PATH = "./data/conf"
 
 try:
@@ -108,7 +110,7 @@ try:
         supervisor_url = config.get('chronos', 'supervisor_url')
 
 except Exception as e:
-    print "Error: %s" % e.message
+    API_LOG.log("Error: %s" % e.message)
     quit()
 
 """ Gets the IP address of one slave node contained
@@ -137,5 +139,5 @@ def get_node_cluster(k8s_conf_path):
         return node_ip
 
     except Exception:
-        print("Connection with the cluster %s was not successful" % k8s_conf_path)
+        API_LOG.log("Connection with the cluster %s was not successful" % k8s_conf_path)
             

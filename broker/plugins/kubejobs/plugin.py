@@ -31,7 +31,7 @@ from broker.utils.framework import visualizer
 from broker.service import api
 from broker.service.api import v10
 
-LOG = Log("ChronosPlugin", "logs/chronos_plugin.log")
+KUBEJOBS_LOG = Log("KubeJobsPlugin", "logs/kubejobs.log")
 application_time_log = Log("Application_time", "logs/application_time.log")
 
 
@@ -40,8 +40,10 @@ class KubeJobsExecutor(GenericApplicationExecutor):
     def __init__(self, app_id):
         self.id = ID_Generator().get_ID()
         self.app_id = app_id
+        self.starting_time = None
         self.rds = None
         self.status = "created"
+        self.waiting_time = 300
         self.job_completed = False
         self.terminated = False        
         self.visualizer_url = "URL not generated!"
@@ -100,7 +102,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
                 data['monitor_info'].update({'datasource_type': datasource_type})
 
-                print "Creating Visualization plataform"
+                KUBEJOBS_LOG.log("Creating Visualization plataform")
 
                 data['visualizer_info'].update({
                                          'enable_visualizer': data['enable_visualizer'],
@@ -115,25 +117,24 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                 self.visualizer_url = visualizer.get_visualizer_url(api.visualizer_url,
                                                                     self.app_id)
 
-                print "Dashboard of the job created on: %s" % (self.visualizer_url)
+                KUBEJOBS_LOG.log("Dashboard of the job created on: %s" % (self.visualizer_url))
 
-            print "Creating Redis queue"
+            KUBEJOBS_LOG.log("Creating Redis queue")
             for job in jobs:
                 self.rds.rpush("job", job)
 
-            print "Creating Job"
+            KUBEJOBS_LOG.log("Creating Job")
 
             self.k8s.create_job(self.app_id,
                            data['cmd'], data['img'],
                            data['init_size'], data['env_vars'], config_id=data["config_id"])
 
-            starting_time = datetime.datetime.now().\
-                strftime('%Y-%m-%dT%H:%M:%S.%fGMT')
+            self.starting_time = datetime.datetime.now()
             
             # Starting monitor
-            data['monitor_info'].update({'count_jobs_url': api.count_queue,
-                                         'number_of_jobs': queue_size,
-                                         'submission_time': starting_time,
+            data['monitor_info'].update({'number_of_jobs': queue_size,
+                                         'submission_time': self.starting_time.\
+                                                 strftime('%Y-%m-%dT%H:%M:%S.%fGMT'),
                                          'redis_ip': redis_ip,
                                          'redis_port': redis_port,
                                          'enable_visualizer': self.enable_visualizer})#,
@@ -158,29 +159,35 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             if(self.get_application_state() == "ongoing"):
                 self.update_application_state("completed")
 
-            print "Job finished"
+            KUBEJOBS_LOG.log("Job finished")
 
-            time.sleep(float(30))
+            time.sleep(float(self.waiting_time))
 
             if self.enable_visualizer:
                 visualizer.stop_visualization(api.visualizer_url,
                                                 self.app_id, data['visualizer_info'])
             monitor.stop_monitor(api.monitor_url, self.app_id)
             controller.stop_controller(api.controller_url, self.app_id)
-            print "Stoped services"
+            KUBEJOBS_LOG.log("Stoped services")
 
             # delete redis resources
             if not self.get_application_state() == 'terminated':
-                self.k8s.delete_redis_resources(self.app_id)
+                self.k8s.terminate_job(self.app_id)
 
         except Exception as ex:
             self.update_application_state("error")
-            print "ERROR: %s" % ex
+            KUBEJOBS_LOG.log("ERROR: %s" % ex)
 
-        print "Application finished."
+        KUBEJOBS_LOG.log("Application finished.")
 
     def get_application_state(self):
         return self.status
+    
+    def get_application_execution_time(self):
+        return (datetime.datetime.now() - self.starting_time).total_seconds()
+
+    def get_application_start_time(self):
+        return self.starting_time.strftime('%Y-%m-%dT%H:%M:%S.%fGMT')
 
     def update_application_state(self, state):
         self.status = state

@@ -358,6 +358,7 @@ def activate_cluster(cluster_name, data):
         API_LOG.log("Cluster does not exists in this Asperathos instance!")
         raise ex.BadRequestException("Cluster does not exists in this Asperathos instance!")
     elif(cluster_name == activated_cluster):
+        shutil.copyfile("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name), api.k8s_conf_path)
         API_LOG.log("Cluster already activated in this Asperathos instance!")
         status = "success"
     else:
