@@ -77,6 +77,8 @@ def terminate_submission(submission_id, data):
     return end_submission(submission_id, data, True)
 
 def submission_errors(submission_id):
+    if submission_id not in submissions:
+        return None
     return submissions[submission_id].errors()
 
 def end_submission(submission_id, data, hard_finish):

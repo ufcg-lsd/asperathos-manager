@@ -194,6 +194,10 @@ class KubeJobsExecutor(GenericApplicationExecutor):
         self.rds.delete("job")
     
     def errors(self):
+        try:
+            self.rds.ping()
+        except redis.exceptions.ConnectionError as ex:
+            return ()
         return self.rds.lrange("job:errors", 0, -1)
 
 class KubeJobsProvider(base.PluginInterface):
