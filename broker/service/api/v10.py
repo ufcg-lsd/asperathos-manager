@@ -31,7 +31,6 @@ from broker import exceptions as ex
 API_LOG = Log("APIv10", "logs/APIv10.log")
 
 submissions = {}
-submissions_info = {}
 clusters = {}
 activated_cluster = None
 
