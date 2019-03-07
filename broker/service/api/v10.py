@@ -63,13 +63,12 @@ def run_submission(data):
         submission_data = data['plugin_info']
         submission_data['enable_auth'] = data['enable_auth']
         submission_id, executor = plugin.execute(submission_data)
-        submissions[submission_id] = executor
+        submissions[submission_id] = executor 
 
         return {"job_id": submission_id}
 
 
 def stop_submission(submission_id, data):
-
     return end_submission(submission_id, data, False)
 
 def terminate_submission(submission_id, data):
@@ -106,6 +105,12 @@ def list_submissions():
 
         this_status['status'] = (submissions[id].
                                  get_application_state())
+        this_status['execution_time'] = (submissions[id].
+                                     get_application_execution_time())
+        this_status['start_time'] = (submissions[id].
+                                 get_application_start_time())
+        this_status['visualizer_url'] = (submissions[id].
+                                 get_visualizer_url())                      
 
     return submissions_status
 
@@ -115,7 +120,7 @@ def submission_status(submission_id):
         API_LOG.log("Wrong request")
         raise ex.BadRequestException()
 
-    # TODO: Update status of application with more informations
+    #TODO: Update status of application with more informations
 
     this_status = {}
     this_status['status'] = (submissions[submission_id].
@@ -127,7 +132,10 @@ def submission_status(submission_id):
     this_status['start_time'] = (submissions[submission_id].
                                  get_application_start_time())
 
-    return this_status
+    this_status['visualizer_url'] = (submissions[submission_id].
+                                 get_visualizer_url())
+
+    return {submission_id: this_status}
 
 
 def submission_log(submission_id):

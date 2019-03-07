@@ -182,12 +182,21 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
     def get_application_state(self):
         return self.status
+
+    def get_visualizer_url(self):
+        return self.visualizer_url
     
     def get_application_execution_time(self):
-        return (datetime.datetime.now() - self.starting_time).total_seconds()
+        if(self.starting_time != None):
+            return (datetime.datetime.now() - self.starting_time).total_seconds()
+        else:
+            return "Job is not running yet!"
 
     def get_application_start_time(self):
-        return self.starting_time.strftime('%Y-%m-%dT%H:%M:%S.%fGMT')
+        if(self.starting_time != None):
+            return self.starting_time.strftime('%Y-%m-%dT%H:%M:%S.%fGMT')
+        else:
+            return "Job is not running yet!"
 
     def update_application_state(self, state):
         self.status = state
