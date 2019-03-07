@@ -49,6 +49,44 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 * **Error Response:**
   * **Code:** `400 BAD REQUEST` and `401 UNAUTHORIZED`<br />
 
+## Delete submission
+  Delete a done submission.
+
+* **URL**: `/submissions/:id/delete`
+* **Method:** `DELETE`
+
+* **JSON Request:**
+	* ```javascript
+	  {
+	     username : [string],
+	     password : [string]
+	  }
+	  ```
+* **Success Response:**
+  * **Code:** `204` <br />
+		
+* **Error Response:**
+  * **Code:** `400 BAD REQUEST` and `401 UNAUTHORIZED`<br />
+
+## Delete all submissions
+  Delete all done submissions.
+
+* **URL**: `/submissions/delete`
+* **Method:** `DELETE`
+
+* **JSON Request:**
+	* ```javascript
+	  {
+	     username : [string],
+	     password : [string]
+	  }
+	  ```
+* **Success Response:**
+  * **Code:** `204` <br />
+		
+* **Error Response:**
+  * **Code:** `400 BAD REQUEST` and `401 UNAUTHORIZED`<br />
+
 ## List submissions
   List all submissions.
 

@@ -394,6 +394,42 @@ def get_activated_cluster():
 
     global activated_cluster
     return {activated_cluster : clusters[activated_cluster]}
+
+""" Delete a done submission from the list of all
+    submissions.
+
+Raises:
+    ex.BadRequestException -- Missing parameters in request
+    ex.BadRequestException -- Trying to delete a submission that does not exists
+    ex.UnauthorizedException -- Authetication problem
+"""
+def delete_submission(submission_id, data):
+
+    check_authorization(data)
+
+    if submission_id in submissions.keys():
+        if submission_status(submission_id)['status'] in ["completed", "terminated", "error"]:
+            del submissions[submission_id]
+            API_LOG.log("%s submission deleted from this Asperathos instance!" % (submission_id))
+        else:
+            API_LOG.log("%s submission still running in this Asperathos instance!" % (submission_id))
+    else:
+        API_LOG.log("Specified submission does not exists in this Asperathos instance!")
+        raise ex.BadRequestException("Specified submission does not exists in this Asperathos instance!")
+
+""" Delete all done submissions from the list of all
+    submissions.
+
+Raises:
+    ex.BadRequestException -- Missing parameters in request
+    ex.UnauthorizedException -- Authetication problem
+"""
+def delete_all_submissions(data):
+    
+    check_authorization(data)
+
+    for id in submissions.keys():
+        delete_submission(id, data)
     
 """ Checks the user's need to authenticate to Asperathos
 

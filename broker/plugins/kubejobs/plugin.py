@@ -43,7 +43,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
         self.starting_time = None
         self.rds = None
         self.status = "created"
-        self.waiting_time = 300
+        self.waiting_time = 600
         self.job_completed = False
         self.terminated = False        
         self.visualizer_url = "URL not generated!"

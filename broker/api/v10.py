@@ -163,3 +163,23 @@ def get_clusters():
 @rest.get('/submissions/cluster/activate')
 def get_activated_cluster():
     return u.render(api.get_activated_cluster())
+
+""" Delete a done submission for the list of 
+    all submissions
+                                                                              
+    Normal response codes: 200
+    Error response codes: 400
+"""
+@rest.delete('/submissions/<submission_id>/delete')
+def delete_submission(submission_id, data):
+    return u.render(api.delete_submission(submission_id, data))
+
+""" Delete all done submissions from the list of all
+    submissions.
+                                                                              
+    Normal response codes: 200
+    Error response codes: 400
+"""
+@rest.delete('/submissions/delete')
+def delete_all_submissions(data):
+    return u.render(api.delete_all_submissions(data))
