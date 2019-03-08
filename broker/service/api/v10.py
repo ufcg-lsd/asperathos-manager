@@ -416,7 +416,7 @@ def delete_submission(submission_id, data):
     check_authorization(data)
 
     if submission_id in submissions.keys():
-        if submission_status(submission_id)['status'] in ["completed", "terminated", "error"]:
+        if submissions[submission_id].get_application_state() in ["completed", "terminated", "error"]:
             del submissions[submission_id]
             API_LOG.log("%s submission deleted from this Asperathos instance!" % (submission_id))
         else:
