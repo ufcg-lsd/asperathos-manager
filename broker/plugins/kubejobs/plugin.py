@@ -168,6 +168,9 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                                                 self.app_id, data['visualizer_info'])
             monitor.stop_monitor(api.monitor_url, self.app_id)
             controller.stop_controller(api.controller_url, self.app_id)
+
+            self.visualizer_url = "Url is dead!"
+
             KUBEJOBS_LOG.log("Stoped services")
 
             # delete redis resources
