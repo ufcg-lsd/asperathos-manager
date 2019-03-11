@@ -24,14 +24,14 @@ try:
     # Conf reading
     config = ConfigParser.RawConfigParser()
     config.read('./broker.cfg')
-    
+
     """ Services configuration """
     monitor_url = config.get('services', 'monitor_url')
     controller_url = config.get('services', 'controller_url')
     visualizer_url = config.get('services', 'visualizer_url')
     authorization_url = config.get('services', 'authorization_url')
     optimizer_url = config.get('services', 'optimizer_url')
-    
+
     """ General configuration """
     host = config.get("general", "host")
     port = config.getint('general', 'port')
@@ -41,12 +41,12 @@ try:
     for plugin in plugins:
         if plugin != '' and plugin not in config.sections():
             raise Exception("plugin '%s' section missing" % plugin)
-    
+
     if 'kubejobs' in plugins:
 
         # Setting default values for the necessary variables
         k8s_conf_path = CONFIG_PATH
-    
+
         # If explicitly stated in the cfg file, overwrite the variables
         if(config.has_section('kubejobs')):
 
@@ -56,7 +56,7 @@ try:
                 count_queue = config.get('kubejobs', 'count_queue')
             if(config.has_option('kubejobs', 'redis_ip')):
                 redis_ip = config.get('kubejobs', 'redis_ip')
-        
+
     if 'openstack_generic' in plugins:
         public_key = config.get('openstack_generic', 'public_key')
         key_path = config.get('openstack_generic', 'key_path')
@@ -67,7 +67,7 @@ try:
         password = config.get('openstack_generic', 'password')
         domain = config.get('openstack_generic', 'user_domain_name')
         log_path = config.get('openstack_generic', 'log_path')
-    
+
     if 'spark_sahara' in plugins:
         log_path = config.get('openstack_generic', 'log_path')
         public_key = config.get('spark_sahara', 'public_key')
@@ -85,13 +85,13 @@ try:
         number_of_attempts = config.getint('spark_sahara', 'number_of_attempts')
         dummy_opportunistic = config.getboolean('spark_sahara', 'dummy_opportunistic')
         hosts = config.get('spark_sahara', 'hosts').split(',')
-    
+
     if 'spark_generic' in plugins:
         key_path = config.get('spark_generic', 'key_path')
         number_of_attempts = config.getint('spark_generic', 'number_of_attempts')
         remote_hdfs = config.get('spark_generic', 'remote_hdfs')
         masters_ips = config.get('spark_generic', 'masters_ips').split(' ')
-    
+
     if 'spark_mesos' in plugins:
         mesos_url = config.get('spark_mesos', 'mesos_url')
         mesos_port = config.get('spark_mesos', 'mesos_port')
@@ -102,7 +102,7 @@ try:
         one_password = config.get('spark_mesos', 'one_password')
         one_username = config.get('spark_mesos', 'one_username')
         spark_path = config.get('spark_mesos', 'spark_path')
-    
+
     if 'chronos' in plugins:
         chronos_url = config.get('chronos', 'url')
         chronos_username = config.get('chronos', 'username')
@@ -115,8 +115,8 @@ except Exception as e:
 
 """ Gets the IP address of one slave node contained
     in a Kubernetes cluster. The k8s API aways returns information
-    about the master node followed by the information of the slaves.   
-    Therefore, in order to avoid get the IP of the master node, 
+    about the master node followed by the information of the slaves.
+    Therefore, in order to avoid get the IP of the master node,
     this function always get the last node listed by the API.
 
     Raises:
@@ -130,14 +130,11 @@ def get_node_cluster(k8s_conf_path):
     try:
         kube.config.load_kube_config(k8s_conf_path)
         CoreV1Api = kube.client.CoreV1Api()
-
-        node_number = len(CoreV1Api.list_node().items)
-
-        node_info = CoreV1Api.list_node().items[node_number - 1]
+        for node in CoreV1Api.list_node().items:
+            is_ready = [s for s in node.status.conditions if s.type == 'Ready'][0].status == 'True'
+            if is_ready:
+                node_info = node
         node_ip = node_info.status.addresses[0].address
-
         return node_ip
-
     except Exception:
         API_LOG.log("Connection with the cluster %s was not successful" % k8s_conf_path)
-            
