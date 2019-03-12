@@ -104,7 +104,7 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
                                                                 instance_id)
                 while instance_status != 'ACTIVE':
                     instance_status = connector.get_instance_status(
-                                          nova, instance_id)
+                        nova, instance_id)
 
                 instance_ips = connector.get_instance_networks(nova,
                                                                instance_id)
@@ -161,7 +161,7 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
                 conn.exec_command(command)
                 app_start_time = time.time()
 
-                app_id = "app-os-generic"+str(uuid.uuid4())[:8]
+                app_id = "app-os-generic" + str(uuid.uuid4())[:8]
                 applications.append(app_id)
 
                 monitor_plugin = monitor_plugin
@@ -182,7 +182,7 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
 
                     LOG.log("Starting scaling")
                     print "Starting scaling"
-                    
+
                     controller.start_controller(api.controller_url, app_id,
                                                 instances, data)
 
@@ -207,7 +207,7 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
 
                     for app_id in applications:
                         LOG.log("Stopping monitoring")
-                        print "Stopping monitoring"    
+                        print "Stopping monitoring"
                         monitor.stop_monitor(api.monitor_url, app_id)
 
                         LOG.log("Stopping scaling")
@@ -220,7 +220,7 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
                 time.sleep(2)
 
             LOG.log("Removing instances...")
-            print "Removing instances..."    
+            print "Removing instances..."
 
             # Remove instances after the end of all applications
             self._remove_instances(nova, connector, instances)
