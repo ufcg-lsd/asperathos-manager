@@ -20,7 +20,7 @@ import json
 def extract_vms_ids(output):
     lines = output.split('\n')
     ids = []
-    for i in range(1, len(lines)-1):
+    for i in range(1, len(lines) - 1):
         ids.append(lines[i].split()[0])
 
     return ids

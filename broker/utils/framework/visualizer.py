@@ -17,6 +17,7 @@ import ast
 import json
 import requests
 
+
 def start_visualization(visualizer_url, app_id, data):
 
     request_url = visualizer_url + '/visualizing/' + app_id
@@ -24,6 +25,7 @@ def start_visualization(visualizer_url, app_id, data):
     visualizer_body = json.dumps(data)
 
     requests.post(request_url, data=visualizer_body, headers=headers)
+
 
 def stop_visualization(visualizer_url, app_id, data):
 
@@ -38,8 +40,9 @@ def stop_visualization(visualizer_url, app_id, data):
 
     requests.put(request_url, data=visualizer_body, headers=headers)
 
+
 def get_visualizer_url(visualizer_url, app_id):
-    
+
     request_url = visualizer_url + '/visualizing/' + app_id
     headers = {'Content-type': 'application/json'}
 

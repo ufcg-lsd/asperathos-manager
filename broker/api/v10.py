@@ -28,7 +28,7 @@ CORS(rest, expose_headers='Authorization')
 """
 @rest.post('/submissions')
 def run_submission(data):
-    return u.render(api.run_submission(data)) 
+    return u.render(api.run_submission(data))
 
 
 """ Stop a running submission.
@@ -49,7 +49,7 @@ def stop_submission(submission_id, data):
 @rest.put('/submissions/<submission_id>/terminate')
 def terminate_submission(submission_id, data):
     return u.render(api.terminate_submission(submission_id, data))
- 
+
 
 """ List all submissions (done or not).
 
@@ -70,6 +70,7 @@ def list_submissions():
 def submission_status(submission_id):
     return u.render(api.submission_status(submission_id))
 
+
 """ Show the errors in an execution.
 
     Normal response codes: 200
@@ -79,8 +80,9 @@ def submission_status(submission_id):
 def submission_errors(submission_id):
     return u.render(api.submission_errors(submission_id))
 
+
 """ Show log of a specific submission.
-                                                                              
+
     Normal response codes: 200
     Error response codes: 400
 """
@@ -88,15 +90,18 @@ def submission_errors(submission_id):
 def submission_log(submission_id):
     return u.render(api.submission_log(submission_id))
 
+
 """ Return the visualizer URL of a specific submission.
 
     Normal response codes: 200
     Error response codes: 400
 """
 
+
 @rest.get('/submissions/<submission_id>/visualizer')
 def submission_visualizer(submission_id):
     return u.render(api.submission_visualizer(submission_id))
+
 
 """ Add a new cluster reference in the Asperathos section.
 
@@ -105,7 +110,8 @@ def submission_visualizer(submission_id):
 """
 @rest.post('/submissions/cluster')
 def add_cluster(data):
-    return u.render(api.add_cluster(data)) 
+    return u.render(api.add_cluster(data))
+
 
 """ Add a certificate to a cluster reference in the Asperathos section.
 
@@ -114,16 +120,23 @@ def add_cluster(data):
 """
 @rest.post('/submissions/cluster/<cluster_name>/certificate')
 def add_certificate(cluster_name, data):
-    return u.render(api.add_certificate(cluster_name, data)) 
+    return u.render(api.add_certificate(cluster_name, data))
+
 
 """ Delete a certificate to a cluster reference in the Asperathos section.
 
     Normal response codes: 202
     Error response codes: 400, 401
 """
-@rest.delete('/submissions/cluster/<cluster_name>/certificate/<certificate_name>/delete')
+@rest.delete(
+    '/submissions/cluster/<cluster_name>/certificate/<certificate_name>/delete')
 def delete_certificate(cluster_name, certificate_name, data):
-    return u.render(api.delete_certificate(cluster_name, certificate_name, data)) 
+    return u.render(
+        api.delete_certificate(
+            cluster_name,
+            certificate_name,
+            data))
+
 
 """ Delete a cluster reference in the Asperathos section.
 
@@ -132,11 +145,12 @@ def delete_certificate(cluster_name, certificate_name, data):
 """
 @rest.delete('/submissions/cluster/<cluster_name>/delete')
 def delete_cluster(cluster_name, data):
-    return u.render(api.delete_cluster(cluster_name, data)) 
+    return u.render(api.delete_cluster(cluster_name, data))
+
 
 """ Start to use the informed cluster as active cluster
     in the Asperathos section.
-                                                                              
+
     Normal response codes: 200
     Error response codes: 400
 """
@@ -144,9 +158,10 @@ def delete_cluster(cluster_name, data):
 def activate_cluster(cluster_name, data):
     return u.render(api.activate_cluster(cluster_name, data))
 
-""" Get the list of usable clusters in a 
+
+""" Get the list of usable clusters in a
     Asperathos Manager instance
-                                                                              
+
     Normal response codes: 200
     Error response codes: 400
 """
@@ -154,9 +169,10 @@ def activate_cluster(cluster_name, data):
 def get_clusters():
     return u.render(api.get_clusters())
 
+
 """ Get the current active cluster in a
     Asperathos Manager instance
-                                                                              
+
     Normal response codes: 200
     Error response codes: 400
 """
@@ -164,9 +180,10 @@ def get_clusters():
 def get_activated_cluster():
     return u.render(api.get_activated_cluster())
 
-""" Delete a done submission for the list of 
+
+""" Delete a done submission for the list of
     all submissions
-                                                                              
+
     Normal response codes: 200
     Error response codes: 400
 """
@@ -174,9 +191,10 @@ def get_activated_cluster():
 def delete_submission(submission_id, data):
     return u.render(api.delete_submission(submission_id, data))
 
+
 """ Delete all done submissions from the list of all
     submissions.
-                                                                              
+
     Normal response codes: 200
     Error response codes: 400
 """

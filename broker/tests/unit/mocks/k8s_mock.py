@@ -20,6 +20,8 @@ Kubernetes (k8s) Object with tests purposes
 """
 Class that represents a mock of the Job object
 """
+
+
 class Job():
 
     """ Constructor of the mock of a Job object
@@ -27,12 +29,16 @@ class Job():
     Returns:
         Job: The simulation of a Job object
     """
+
     def __init__(self, active):
-       self.status = Status(active)
+        self.status = Status(active)
+
 
 """
 Class that represents a mock of the Status object
 """
+
+
 class Status():
 
     """ Constructor of the mock of a Status object
@@ -43,12 +49,16 @@ class Status():
     Returns:
         Status: The simulation of a Status object
     """
+
     def __init__(self, active):
         self.active = active
+
 
 """
 Class that represents a mock of the k8s object
 """
+
+
 class MockKube():
 
     """ Constructor of the mock of a k8s object
@@ -61,8 +71,9 @@ class MockKube():
     Returns:
         MockKube: A mock of a k8s object
     """
+
     def __init__(self, app_id, replicas=1, namespace="default"):
-       self.jobs = {namespace: {app_id: replicas}}
+        self.jobs = {namespace: {app_id: replicas}}
 
     """ Function that simulates the read of a namespaced job
 
@@ -73,10 +84,10 @@ class MockKube():
     Returns:
         Job: The simulation of the Job object searched
     """
-    def read_namespaced_job(self, name, namespace="default"):
-       out = Job(self.jobs[namespace][name])
-       return out
 
+    def read_namespaced_job(self, name, namespace="default"):
+        out = Job(self.jobs[namespace][name])
+        return out
 
     """ Function that simulates the creation of a job
 
@@ -92,9 +103,10 @@ class MockKube():
     Returns:
         None
     """
-    def create_job(self, app_id, cmd, img, init_size, 
-                                  env_vars, config_id=""):
-       pass
+
+    def create_job(self, app_id, cmd, img, init_size,
+                   env_vars, config_id=""):
+        pass
 
     """ Function that simulates the provision of death of
         the redis
@@ -105,8 +117,9 @@ class MockKube():
     Returns:
         tuple: Representing the redis_ip and node_port
     """
+
     def provision_redis_or_die(self, app_id):
-       return (None, None)
+        return (None, None)
 
     """ Function that gets the status of completion of
         a job.
@@ -115,9 +128,10 @@ class MockKube():
         app_id (string): Representing id of the application
 
     Returns:
-        bool: Representing the status of completion 
+        bool: Representing the status of completion
         of the job
     """
+
     def completed(self, app_id):
         return True
 
@@ -130,11 +144,12 @@ class MockKube():
     Returns:
         None
     """
+
     def delete_redis_resources(self, app_id):
-       pass
-       
-    """ Function that simulates a termination 
-        of the job.        
+        pass
+
+    """ Function that simulates a termination
+        of the job.
 
     Args:
         app_id (string): Representing id of the application
@@ -142,8 +157,9 @@ class MockKube():
     Returns:
         None
     """
-    def terminate_job(self, app_id):       
-      self.jobs["default"].pop(app_id)
+
+    def terminate_job(self, app_id):
+        self.jobs["default"].pop(app_id)
 
     """ Function that simulates a InfluxDB creation.
 
@@ -154,7 +170,6 @@ class MockKube():
         None
     """
     def create_influxdb(app_id, database_name="asperathos",
-                 img="influxdb", namespace="default", 
-                 visualizer_port=8086, timeout=60):
+                        img="influxdb", namespace="default",
+                        visualizer_port=8086, timeout=60):
         return {"port": 1234, "name": database_name}
-

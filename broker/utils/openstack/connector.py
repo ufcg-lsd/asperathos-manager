@@ -72,9 +72,9 @@ class OpenStackConnector(object):
 
     def upload_directory(self, swift, local_dir, swift_dir, container):
         for target_file in os.listdir(local_dir):
-            if local_dir[len(local_dir)-1] == '/':
-                local_file = local_dir[:len(local_dir)-1]+'/'+target_file
-                swift_name = swift_dir[:len(swift_dir)-1]+'/'+target_file
+            if local_dir[len(local_dir) - 1] == '/':
+                local_file = local_dir[:len(local_dir) - 1] + '/' + target_file
+                swift_name = swift_dir[:len(swift_dir) - 1] + '/' + target_file
             else:
                 local_file = local_dir + '/' + target_file
                 swift_name = swift_dir + '/' + target_file
@@ -90,15 +90,15 @@ class OpenStackConnector(object):
 
     def download_directory(self, swift, src_dir, dest_dir, container):
         for obj in swift.get_container(container)[1]:
-            if (obj['name'].startswith(src_dir) 
-            and obj['name'][len(obj['name'])-1] != '/'):
+            if (obj['name'].startswith(src_dir)
+                    and obj['name'][len(obj['name']) - 1] != '/'):
                 self.download_file(swift, obj['name'], dest_dir, container)
 
     def download_file(self, swift, src_file, dest_dir, container):
         headers, content = swift.get_object(container, src_file)
         splitted = src_file.split('/')
 
-        dest_file = dest_dir + '/' + splitted[len(splitted)-1]
+        dest_file = dest_dir + '/' + splitted[len(splitted) - 1]
         with open(dest_file, 'w') as local:
             local.write(content)
 
@@ -327,6 +327,7 @@ class OpenStackConnector(object):
             if "Quota exceeded" in str(e):
                 raise e
             return 'api_exception'
+
     def get_worker_host_ip(self, worker_id):
 
         # FIXME hardcoded
@@ -417,7 +418,7 @@ class OpenStackConnector(object):
         return None
 
     def create_instance(self, nova, image_id, flavor_id, public_key):
-        instance_name = "os-"+str(uuid.uuid4())[:8]
+        instance_name = "os-" + str(uuid.uuid4())[:8]
         server = nova.servers.create(instance_name, image=image_id,
                                      flavor=flavor_id, key_name=public_key)
         return server.id

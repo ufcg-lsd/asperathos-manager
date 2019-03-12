@@ -36,6 +36,7 @@ activated_cluster = None
 
 CLUSTER_CONF_PATH = "./data/clusters"
 
+
 def run_submission(data):
     if ('plugin' not in data or 'plugin_info' not in data):
         API_LOG.log("Missing plugin fields in request")
@@ -50,20 +51,21 @@ def run_submission(data):
         password = data['password']
 
         authorization = authorizer.get_authorization(api.authorization_url,
-                                                    username, password)
+                                                     username, password)
 
         if not authorization['success']:
             API_LOG.log("Unauthorized request")
             raise ex.UnauthorizedException()
 
     else:
-        if data['plugin'] not in api.plugins: raise ex.BadRequestException()
- 
+        if data['plugin'] not in api.plugins:
+            raise ex.BadRequestException()
+
         plugin = plugin_base.PLUGINS.get_plugin(data['plugin'])
         submission_data = data['plugin_info']
         submission_data['enable_auth'] = data['enable_auth']
         submission_id, executor = plugin.execute(submission_data)
-        submissions[submission_id] = executor 
+        submissions[submission_id] = executor
 
         return {"job_id": submission_id}
 
@@ -71,14 +73,17 @@ def run_submission(data):
 def stop_submission(submission_id, data):
     return end_submission(submission_id, data, False)
 
+
 def terminate_submission(submission_id, data):
-    
+
     return end_submission(submission_id, data, True)
+
 
 def submission_errors(submission_id):
     if submission_id not in submissions:
         return None
     return submissions[submission_id].errors()
+
 
 def end_submission(submission_id, data, hard_finish):
 
@@ -106,11 +111,11 @@ def list_submissions():
         this_status['status'] = (submissions[id].
                                  get_application_state())
         this_status['execution_time'] = (submissions[id].
-                                     get_application_execution_time())
+                                         get_application_execution_time())
         this_status['start_time'] = (submissions[id].
-                                 get_application_start_time())
+                                     get_application_start_time())
         this_status['visualizer_url'] = (submissions[id].
-                                 get_visualizer_url())                      
+                                         get_visualizer_url())
 
     return submissions_status
 
@@ -120,7 +125,7 @@ def submission_status(submission_id):
         API_LOG.log("Wrong request")
         raise ex.BadRequestException()
 
-    #TODO: Update status of application with more informations
+    # TODO: Update status of application with more informations
 
     this_status = {}
     this_status['status'] = (submissions[submission_id].
@@ -133,7 +138,7 @@ def submission_status(submission_id):
                                  get_application_start_time())
 
     this_status['visualizer_url'] = (submissions[submission_id].
-                                 get_visualizer_url())
+                                     get_visualizer_url())
 
     return {submission_id: this_status}
 
@@ -143,13 +148,13 @@ def submission_log(submission_id):
         API_LOG.log("Wrong request")
         raise ex.BadRequestException()
 
-    logs = {'execution':'', 'stderr':'', 'stdout': ''}
+    logs = {'execution': '', 'stderr': '', 'stdout': ''}
 
     exec_log = open("logs/apps/%s/execution" % submission_id, "r")
     stderr = open("logs/apps/%s/stderr" % submission_id, "r")
     stdout = open("logs/apps/%s/stdout" % submission_id, "r")
 
-    remove_newline = lambda x: x.replace("\n","")
+    def remove_newline(x): return x.replace("\n", "")
     logs['execution'] = map(remove_newline, exec_log.readlines())
     logs['stderr'] = map(remove_newline, stderr.readlines())
     logs['stdout'] = map(remove_newline, stdout.readlines())
@@ -172,6 +177,7 @@ Returns:
             that gives access to the visualizer platform as value.
 """
 
+
 def submission_visualizer(submission_id):
 
     if submission_id not in submissions.keys():
@@ -187,16 +193,19 @@ def submission_visualizer(submission_id):
     address = api.visualizer_url.split('/')[-1]
     ip = address.split(':')[0]
     port = int(address.split(':')[1])
-    
+
     result = sock.connect_ex((ip, port))
     if result == 0:
         API_LOG.log("Visualizing Running on port %s" % port)
-        visualizer_url = visualizer.get_visualizer_url(api.visualizer_url, submission_id)
+        visualizer_url = visualizer.get_visualizer_url(
+            api.visualizer_url, submission_id)
     else:
         API_LOG.log("There is no process running in the Visualizer address")
-        raise ex.BadRequestException("There is no process running in the Visualizer address")
+        raise ex.BadRequestException(
+            "There is no process running in the Visualizer address")
 
     return {"visualizer_url": visualizer_url}
+
 
 """ Add a new cluster that can be choose to be the active
    cluster in the Asperathos section in execution time.
@@ -209,6 +218,8 @@ Returns:
     dict -- Returns a dict with the cluster_name and
     the status of the addition
 """
+
+
 def add_cluster(data):
     if ('cluster_name' not in data or 'cluster_config' not in data):
         API_LOG.log("Missing cluster fields in request")
@@ -221,12 +232,15 @@ def add_cluster(data):
 
     if(os.path.isfile("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name))):
         API_LOG.log("Cluster already exists in this Asperathos instance!")
-        raise ex.BadRequestException("Cluster already exists in this Asperathos instance!")
+        raise ex.BadRequestException(
+            "Cluster already exists in this Asperathos instance!")
     else:
         clusters[conf_name] = {'conf_content': conf_content}
         clusters[conf_name]['active'] = False
         os.makedirs("%s/%s" % (CLUSTER_CONF_PATH, conf_name))
-        conf_file = open("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name), "w")
+        conf_file = open(
+            "%s/%s/%s" %
+            (CLUSTER_CONF_PATH, conf_name, conf_name), "w")
         conf_file.write(conf_content)
         conf_file.close()
         status = "success"
@@ -245,6 +259,8 @@ Returns:
     dict -- Returns a dict with the cluster_name, certificate_name and
     the status of the addition
 """
+
+
 def add_certificate(cluster_name, data):
 
     if ('certificate_name' not in data or 'certificate_content' not in data):
@@ -258,10 +274,14 @@ def add_certificate(cluster_name, data):
 
     if(os.path.isdir("%s/%s" % (CLUSTER_CONF_PATH, cluster_name))):
         if(os.path.isfile("%s/%s/%s" % (CLUSTER_CONF_PATH, cluster_name, certificate_name))):
-            API_LOG.log("Certificate already exists in this Asperathos instance!")
-            raise ex.BadRequestException("Certificate already exists in this Asperathos instance!")
+            API_LOG.log(
+                "Certificate already exists in this Asperathos instance!")
+            raise ex.BadRequestException(
+                "Certificate already exists in this Asperathos instance!")
         else:
-            certificate_file = open("%s/%s/%s" % (CLUSTER_CONF_PATH, cluster_name, certificate_name), "w")
+            certificate_file = open(
+                "%s/%s/%s" %
+                (CLUSTER_CONF_PATH, cluster_name, certificate_name), "w")
             certificate_file.write(certificate_content)
             certificate_file.close()
 
@@ -270,9 +290,14 @@ def add_certificate(cluster_name, data):
             status = "success"
     else:
         API_LOG.log("Cluster does not exists in this Asperathos instance!")
-        raise ex.BadRequestException("Cluster does not exists in this Asperathos instance!")
+        raise ex.BadRequestException(
+            "Cluster does not exists in this Asperathos instance!")
 
-    return {"cluster_name": cluster_name, "certificate_name": certificate_name, "status": status}
+    return {
+        "cluster_name": cluster_name,
+        "certificate_name": certificate_name,
+        "status": status}
+
 
 """ Delete a certificate to a cluster that can be choose to be the active
    cluster in the Asperathos section in execution time.
@@ -282,28 +307,41 @@ Raises:
     ex.UnauthorizedException -- Authetication problem
 
 Returns:
-    dict -- Returns a dict with the cluster_name, certificate_name and 
+    dict -- Returns a dict with the cluster_name, certificate_name and
     the status of the deletion
 """
+
+
 def delete_certificate(cluster_name, certificate_name, data):
 
     check_authorization(data)
 
     if(os.path.isdir("%s/%s" % (CLUSTER_CONF_PATH, cluster_name))):
         if(os.path.isfile("%s/%s/%s" % (CLUSTER_CONF_PATH, cluster_name, certificate_name))):
-            os.remove("%s/%s/%s" % (CLUSTER_CONF_PATH, cluster_name, certificate_name))
+            os.remove(
+                "%s/%s/%s" %
+                (CLUSTER_CONF_PATH,
+                 cluster_name,
+                 certificate_name))
 
             del clusters[cluster_name][certificate_name]
 
             status = "success"
         else:
-            API_LOG.log("Certificate does not exists in this Asperathos instance!")
-            raise ex.BadRequestException("Certificate does not exists in this Asperathos instance!")
+            API_LOG.log(
+                "Certificate does not exists in this Asperathos instance!")
+            raise ex.BadRequestException(
+                "Certificate does not exists in this Asperathos instance!")
     else:
         API_LOG.log("Cluster does not exists in this Asperathos instance!")
-        raise ex.BadRequestException("Cluster does not exists in this Asperathos instance!")
+        raise ex.BadRequestException(
+            "Cluster does not exists in this Asperathos instance!")
 
-    return {"cluster_name": cluster_name, "certificate_name": certificate_name, "status": status}
+    return {
+        "cluster_name": cluster_name,
+        "certificate_name": certificate_name,
+        "status": status}
+
 
 """ Delete a cluster that could be choose to be the active
     cluster in the Asperathos section in execution time.
@@ -313,9 +351,11 @@ Raises:
     ex.UnauthorizedException -- Authetication problem
 
 Returns:
-    dict -- Returns a dict with the cluster_name and 
+    dict -- Returns a dict with the cluster_name and
     the status of the activation
 """
+
+
 def delete_cluster(cluster_name, data):
 
     check_authorization(data)
@@ -325,9 +365,10 @@ def delete_cluster(cluster_name, data):
 
     if(not os.path.isfile("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name))):
         API_LOG.log("Cluster does not exists in this Asperathos instance!")
-        raise ex.BadRequestException("Cluster does not exists in this Asperathos instance!")
+        raise ex.BadRequestException(
+            "Cluster does not exists in this Asperathos instance!")
     else:
-        
+
         # Check if the cluster to be deleted is the currently active
         # if True, empty the config file currently being used.
         if(filecmp.cmp("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name), api.k8s_conf_path)):
@@ -337,13 +378,15 @@ def delete_cluster(cluster_name, data):
 
         del clusters[cluster_name]
 
-        # If this cluster is the active one, clear the activate cluster variable
+        # If this cluster is the active one, clear the activate cluster
+        # variable
         if(cluster_name == activated_cluster):
             activated_cluster = None
 
         status = "success"
 
     return {"cluster_name": conf_name, "status": status}
+
 
 """ Activate a cluster to be used in a Asperathos section
 
@@ -352,9 +395,11 @@ Raises:
     ex.UnauthorizedException -- Authetication problem
 
 Returns:
-    dict -- Returns a dict with the cluster_name and 
+    dict -- Returns a dict with the cluster_name and
     the status of the activation
 """
+
+
 def activate_cluster(cluster_name, data):
 
     check_authorization(data)
@@ -364,24 +409,36 @@ def activate_cluster(cluster_name, data):
 
     if(not os.path.isfile("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name))):
         API_LOG.log("Cluster does not exists in this Asperathos instance!")
-        raise ex.BadRequestException("Cluster does not exists in this Asperathos instance!")
+        raise ex.BadRequestException(
+            "Cluster does not exists in this Asperathos instance!")
     elif(cluster_name == activated_cluster):
-        shutil.copyfile("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name), api.k8s_conf_path)
+        shutil.copyfile(
+            "%s/%s/%s" %
+            (CLUSTER_CONF_PATH,
+             conf_name,
+             conf_name),
+            api.k8s_conf_path)
         API_LOG.log("Cluster already activated in this Asperathos instance!")
         status = "success"
     else:
-        shutil.copyfile("%s/%s/%s" % (CLUSTER_CONF_PATH, conf_name, conf_name), api.k8s_conf_path)
+        shutil.copyfile(
+            "%s/%s/%s" %
+            (CLUSTER_CONF_PATH,
+             conf_name,
+             conf_name),
+            api.k8s_conf_path)
         status = "success"
         clusters[cluster_name]['active'] = True
 
         # If any cluster was already activated, deactivate it
-        if(activated_cluster != None):
+        if(activated_cluster is not None):
             clusters[activated_cluster]['active'] = False
 
-        # Update the new activate cluster   
+        # Update the new activate cluster
         activated_cluster = cluster_name
 
     return {"cluster_name": conf_name, "status": status}
+
 
 """ Get the list of usable clusters in the Asperathos Manager instance
 
@@ -389,19 +446,25 @@ Returns:
     dict -- Returns a dict with the cluster_name as key and
     the cluster config content as value.
 """
+
+
 def get_clusters():
     return clusters
-    
+
+
 """ Get the current active cluster in Asperathos Manager instance
 
 Returns:
     dict -- Returns a dict with the cluster_name as key and
     the cluster config content as value.
 """
+
+
 def get_activated_cluster():
 
     global activated_cluster
-    return {activated_cluster : clusters[activated_cluster]}
+    return {activated_cluster: clusters[activated_cluster]}
+
 
 """ Delete a done submission from the list of all
     submissions.
@@ -411,19 +474,29 @@ Raises:
     ex.BadRequestException -- Trying to delete a submission that does not exists
     ex.UnauthorizedException -- Authetication problem
 """
+
+
 def delete_submission(submission_id, data):
 
     check_authorization(data)
 
     if submission_id in submissions.keys():
-        if submissions[submission_id].get_application_state() in ["completed", "terminated", "error"]:
+        if submissions[submission_id].get_application_state() in [
+                "completed", "terminated", "error"]:
             del submissions[submission_id]
-            API_LOG.log("%s submission deleted from this Asperathos instance!" % (submission_id))
+            API_LOG.log(
+                "%s submission deleted from this Asperathos instance!" %
+                (submission_id))
         else:
-            API_LOG.log("%s submission still running in this Asperathos instance!" % (submission_id))
+            API_LOG.log(
+                "%s submission still running in this Asperathos instance!" %
+                (submission_id))
     else:
-        API_LOG.log("Specified submission does not exists in this Asperathos instance!")
-        raise ex.BadRequestException("Specified submission does not exists in this Asperathos instance!")
+        API_LOG.log(
+            "Specified submission does not exists in this Asperathos instance!")
+        raise ex.BadRequestException(
+            "Specified submission does not exists in this Asperathos instance!")
+
 
 """ Delete all done submissions from the list of all
     submissions.
@@ -432,19 +505,24 @@ Raises:
     ex.BadRequestException -- Missing parameters in request
     ex.UnauthorizedException -- Authetication problem
 """
+
+
 def delete_all_submissions(data):
-    
+
     check_authorization(data)
 
     for id in submissions.keys():
         delete_submission(id, data)
-    
+
+
 """ Checks the user's need to authenticate to Asperathos
 
 Raises:
     ex.BadRequestException -- Missing parameters in request
     ex.UnauthorizedException -- Unauthorized request
 """
+
+
 def check_authorization(data):
 
     if ('enable_auth' not in data):
@@ -462,8 +540,8 @@ def check_authorization(data):
         password = data['password']
 
         authorization = authorizer.get_authorization(api.authorization_url,
-                                                 username, password)
-                                            
+                                                     username, password)
+
         if not authorization['success']:
             API_LOG.log("Unauthorized request")
             raise ex.UnauthorizedException()

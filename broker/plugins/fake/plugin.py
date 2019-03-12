@@ -31,5 +31,6 @@ class FakeProvider(base.PluginInterface):
             'title': self.get_title(),
             'description': self.get_description(),
         }
+
     def execute(self, data):
         return True
