@@ -261,13 +261,13 @@ class OpenStackSparkApplicationExecutor(GenericApplicationExecutor):
 
             self.update_application_state("Error")
 
-        except ex.ConfigurationError as ce:
+        except ex.ConfigurationError:
             self._log("%s | Finished application execution with error" %
                       (time.strftime("%H:%M:%S")))
 
             self.update_application_state("Error")
 
-        except SaharaAPIException as se:
+        except SaharaAPIException:
             self._log("%s | There is not enough resource to create a cluster" %
                       (time.strftime("%H:%M:%S")))
 
@@ -276,7 +276,7 @@ class OpenStackSparkApplicationExecutor(GenericApplicationExecutor):
 
             self.update_application_state("Error")
 
-        except Exception as e:
+        except Exception:
             if cluster_id is not None:
                 self._log("%s | Delete cluster: %s" %
                           (time.strftime("%H:%M:%S"), cluster_id))
@@ -401,10 +401,12 @@ class OpenStackSparkApplicationExecutor(GenericApplicationExecutor):
         self._log("%s | Starting job..." % (time.strftime("%H:%M:%S")))
 
         # Running job
-        configs = os_utils.get_job_config(connector, plugin,
-                                          cluster_size, user, password,
-                                          args, main_class)
+        # What is os_utils?
+        # configs = os_utils.get_job_config(connector, plugin,
+        #                                   cluster_size, user, password,
+        #                                   args, main_class)
 
+        configs = None
         job = connector.create_job_execution(sahara, job_template_id,
                                              cluster_id,
                                              configs=configs)
@@ -472,7 +474,7 @@ class OpenStackSparkApplicationExecutor(GenericApplicationExecutor):
 
         # Defining params
         local_path = '/tmp/spark-jobs/' + job_exec_id + '/'
-        remote_path = 'ubuntu@' + master + ':' + local_path
+        # remote_path = 'ubuntu@' + master + ':' + local_path
 
         job_input_paths, job_output_path, job_params = (
             hdfs.get_job_params(key_path, remote_hdfs, args))
@@ -627,9 +629,12 @@ class OpenStackSparkApplicationExecutor(GenericApplicationExecutor):
             os.mkdir('logs/apps/%s' % app_id)
 
     def _clean_log_files(self, app_id):
-        running_log_file = open("logs/apps/%s/execution" % app_id, "w").close()
-        stdout_file = open("logs/apps/%s/stdout" % app_id, "w").close()
-        stderr_file = open("logs/apps/%s/stderr" % app_id, "w").close()
+        # Commented because isn't used
+        # running_log_file = open("logs/apps/%s/execution" \
+        # % app_id, "w").close()
+        # stdout_file = open("logs/apps/%s/stdout" % app_id, "w").close()
+        # stderr_file = open("logs/apps/%s/stderr" % app_id, "w").close()
+        pass
 
     def _mkdir(self, path):
         subprocess.call('mkdir -p %s' % path, shell=True)

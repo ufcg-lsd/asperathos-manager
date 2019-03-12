@@ -36,7 +36,7 @@ def get_executors_ip(conn, get_frameworks_url, app_id):
         output = stdout.read()
         mesos_resp = json.loads(output)
     except Exception as e:
-        print e.message
+        print(e)
         mesos_resp = {}
 
     executors_ips = []

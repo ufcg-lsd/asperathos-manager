@@ -42,12 +42,13 @@ setup(
         'broker.execution.plugins': [
             'spark_sahara=broker.plugins.spark_sahara.plugin:SaharaProvider',
             'fake=broker.plugins.fake.plugin:FakeProvider',
-            'spark_generic=broker.plugins.spark_generic.plugin:SparkGenericProvider',
-            'openstack_generic=broker.plugins.openstack_generic.plugin:OpenStackGenericProvider',
+            'spark_generic=broker.plugins.spark_generic.'
+            'plugin:SparkGenericProvider',
+            'openstack_generic=broker.plugins.openstack_generic.'
+            'plugin:OpenStackGenericProvider',
             'chronos=broker.plugins.chronos.plugin:ChronosGenericProvider',
             'spark_mesos=broker.plugins.spark_mesos.plugin:SparkMesosProvider',
             'kubejobs=broker.plugins.kubejobs.plugin:KubeJobsProvider'
         ],
     },
 )
-

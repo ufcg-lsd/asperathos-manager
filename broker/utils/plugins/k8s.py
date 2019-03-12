@@ -12,7 +12,6 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import requests
 import time
 
 import kubernetes as kube
@@ -47,8 +46,8 @@ def create_job(app_id, cmd, img, init_size, env_vars,
     for key in env_vars.keys():
 
         var = kube.client.V1EnvVar(
-            name=key,
-            value=env_vars[key])
+                name=key,
+                value=env_vars[key])
 
         envs.append(var)
 
@@ -97,11 +96,8 @@ def create_job(app_id, cmd, img, init_size, env_vars,
     return job
 
 
-def provision_redis_or_die(
-        app_id,
-        namespace="default",
-        redis_port=6379,
-        timeout=60):
+def provision_redis_or_die(app_id, namespace="default",
+                           redis_port=6379, timeout=60):
     """Provision a redis database for the workload being executed.
 
     Create a redis-master Pod and expose it through a NodePort Service.
@@ -194,9 +190,8 @@ def provision_redis_or_die(
             r = redis.StrictRedis(host=redis_ip, port=node_port)
             if r.info()['loading'] == 0:
                 redis_ready = True
-                KUBEJOBS_LOG.log(
-                    "connected to redis on %s:%s!" %
-                    (redis_ip, node_port))
+                KUBEJOBS_LOG.log("connected to redis on %s:%s!"
+                                 % (redis_ip, node_port))
                 break
         except redis.exceptions.ConnectionError:
             KUBEJOBS_LOG.log("redis is not ready yet")
@@ -320,28 +315,28 @@ def create_influxdb(app_id, database_name="asperathos",
         ready = False
         attempts = timeout
         while not ready:
-            read = CoreV1Api.read_namespaced_pod_status(
-                name="influxdb-%s" %
-                app_id, namespace=namespace)
+            read = CoreV1Api.read_namespaced_pod_status(name="influxdb-%s"
+                                                        % app_id,
+                                                        namespace=namespace)
             node_port = s.spec.ports[0].node_port
 
             if read.status.phase == "Running" and node_port is not None:
                 try:
                     # TODO change redis_ip to node_ip
-                    client = InfluxDBClient(
-                        redis_ip, node_port, 'root', 'root', database_name)
+                    client = InfluxDBClient(redis_ip, node_port, 'root',
+                                            'root', database_name)
                     client.create_database(database_name)
                     KUBEJOBS_LOG.log("InfluxDB is ready!!")
                     ready = True
-                except Exception as e:
+                except Exception:
                     KUBEJOBS_LOG.log("InfluxDB is not ready yet...")
             else:
                 attempts -= 1
                 if attempts > 0:
                     time.sleep(1)
                 else:
-                    raise Exception(
-                        "InfluxDB cannot be started! Time limite exceded...")
+                    raise Exception("InfluxDB cannot be started!"
+                                    "Time limite exceded...")
             time.sleep(1)
 
         influxdb_data = {"port": node_port, "name": database_name}

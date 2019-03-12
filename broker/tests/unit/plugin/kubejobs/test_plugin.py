@@ -16,7 +16,6 @@
 import unittest
 import requests_mock
 import json
-import time
 import threading
 
 from broker.plugins.kubejobs.plugin import KubeJobsExecutor

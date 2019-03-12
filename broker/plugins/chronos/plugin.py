@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
+# import time
 import json
 import requests
 
@@ -46,7 +46,7 @@ class ChronosApplicationExecutor(GenericApplicationExecutor):
             chronos = ManagerChronos(url, user, password)
 
             # Obtain arguments
-            start_job = time.time()
+            # start_job = time.time()
             job = data['info_plugin']['job']
             deadline = data['info_plugin']['qos']['deadline']  # + start_job
             job_duration = data['info_plugin']['qos']['duration']  # seconds
@@ -73,7 +73,7 @@ class ChronosApplicationExecutor(GenericApplicationExecutor):
             else:
                 print('ERROR: Launch not completed')
         except BaseException:
-            print "ERROR: run, forest, run!"
+            print("ERROR: run, forest, run!")
 
     def modify_job(self, api_rest_ip, jobname, job):
         updateCommand_1 = "startedAt=$(date +%s); "
@@ -94,11 +94,11 @@ class ChronosApplicationExecutor(GenericApplicationExecutor):
 
     def init_webhook(self, url_webhook, payload):
         head = {'Content-type': 'application/json'}
-        print head
+        print(head)
         url = url_webhook + '/initTask'
         msg = json.dumps(payload)
         response = requests.post(url, headers=head, data=msg)
-        print "Response " + str(response)
+        print("Response " + str(response))
 
 
 class ChronosGenericProvider(base.PluginInterface):
@@ -110,7 +110,8 @@ class ChronosGenericProvider(base.PluginInterface):
         return 'Chronos Plugin'
 
     def get_description(self):
-        return 'Plugin that allows utilization of Chronos for run jobs on Apache Mesos'
+        return 'Plugin that allows utilization of \
+                Chronos for run jobs on Apache Mesos'
 
     def to_dict(self):
         return {

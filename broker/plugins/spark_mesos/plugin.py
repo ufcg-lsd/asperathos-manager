@@ -215,7 +215,7 @@ class SparkMesosApplicationExecutor(GenericApplicationExecutor):
 
             # This command locks the plugin execution
             # until the execution be done
-            print o.read()
+            print(o.read())
 
             plugin_log.log("%s | Stopping monitor" %
                            (time.strftime("%H:%M:%S")))
@@ -237,7 +237,7 @@ class SparkMesosApplicationExecutor(GenericApplicationExecutor):
 
         except Exception as e:
             plugin_log.log(e.message)
-            print e.message
+            print(e)
             self.update_application_state("Error")
 
 

@@ -300,7 +300,7 @@ class SparkGenericProvider(base.PluginInterface):
         self.update_running_clusters()
 
         for ip in api.masters_ips:
-            if ip not in masters:
+            if ip not in self.masters:
                 self.masters[ip] = False
 
         set_masters = set(self.masters.values())
