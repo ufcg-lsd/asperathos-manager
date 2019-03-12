@@ -24,9 +24,6 @@ from novaclient import client as nova_client
 from saharaclient.api.base import APIException as SaharaAPIException
 from saharaclient.api.client import Client as saharaclient
 from swiftclient.client import Connection as swiftclient
-from subprocess import *
-
-from broker.utils import shell
 
 
 class OpenStackConnector(object):
@@ -41,9 +38,9 @@ class OpenStackConnector(object):
                            project_id=project_id,
                            user_domain_name=domain)
         ses = session.Session(auth=auth)
-        print auth_ip + ':5000/v3'
-        print username
-        print project_id
+        print(auth_ip + ':5000/v3')
+        print(username)
+        print(project_id)
         return saharaclient('1.1', session=ses)
 
     def get_nova_client(self, username, password, project_id, auth_ip,
@@ -331,13 +328,17 @@ class OpenStackConnector(object):
     def get_worker_host_ip(self, worker_id):
 
         # FIXME hardcoded
-        hosts = ["c4-compute11", "c4-compute12", "c4-compute22"]
-        for host in hosts:
-            if int(check_output("ssh root@%s test -e "
-                                "\"/var/lib/nova/instances/%s\" && echo "
-                                "\"1\" || echo \"0\"" % (host, worker_id),
-                                shell=True)) == 1:
-                return host
+        # hosts = ["c4-compute11", "c4-compute12", "c4-compute22"]
+
+        # model = ("ssh root@%s test -e "\
+        #         "\"/var/lib/nova/instances/%s\" \ && echo "\
+        #         "\"1\" || echo \"0\"")
+
+        # for host in hosts:
+        #     if int(subprocess.
+        #            check_output(model % (host, worker_id),
+        #                         shell=True)) == 1:
+        #         return host
         return None
 
     def get_cluster_template(self, sahara, req_cluster_size, size, plugin):
@@ -367,7 +368,7 @@ class OpenStackConnector(object):
 
         cluster_template = sahara.cluster_templates.create(
             name, plugin_name, plugin_version, node_groups=node_groups)
-        print '>>>>>>>>>>>>> %s' % cluster_template.__dict__
+        print('>>>>>>>>>>>>> %s' % cluster_template.__dict__)
         return cluster_template.id
 
     def create_job_template(self, sahara, name, job_type, mains=None,

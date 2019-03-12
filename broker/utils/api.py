@@ -20,7 +20,7 @@ from werkzeug import datastructures
 
 from broker import exceptions as ex
 from broker.utils import serializer as u_serializer
-from broker.utils.logger import *
+from broker.utils.logger import Log
 
 
 LOG = Log("UtilsAPI", "logs/utilsapi.log")
@@ -49,7 +49,7 @@ class Rest(flask.Blueprint):
         return self._mroute('PATCH', rule, status_code)
 
     def _mroute(self, methods, rule, status_code=None, **kw):
-        if isinstance(methods, str):
+        if type(methods) is str:
             methods = [methods]
         return self.route(rule, methods=methods, status_code=status_code, **kw)
 
@@ -71,8 +71,8 @@ class Rest(flask.Blueprint):
                     flask.request.status_code = status
 
                 try:
-                    if flask.request.method in [
-                            'POST', 'PUT', 'PATCH', 'DELETE']:
+                    if flask.request.method in ['POST', 'PUT',
+                                                'PATCH', 'DELETE']:
                         kwargs['data'] = request_data()
                     return func(**kwargs)
                 except ex.UnauthorizedException as e:
@@ -116,7 +116,7 @@ def _init_resp_type(file_upload):
 def render(res=None, resp_type=None, status=None, **kwargs):
     if not res:
         res = {}
-    if isinstance(res, dict):
+    if type(res) is dict:
         res.update(kwargs)
     elif kwargs:
         # can't merge kwargs into the non-dict res

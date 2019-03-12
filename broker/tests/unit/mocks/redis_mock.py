@@ -61,7 +61,7 @@ class MockRedis():
         try:
             return self.map.get(metric_queue).pop(0)
         except Exception as e:
-            print e
+            print(e)
 
     """ Function the simulates the deletion of a
         redis queue

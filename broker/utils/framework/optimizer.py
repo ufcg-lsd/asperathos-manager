@@ -17,7 +17,7 @@ import json
 import requests
 
 
-def _get_optimizer_data(hosts, percentage):
+def _get_optimizer_data(hosts, percentage, dummy):
     optimizer_dict = {
         'hosts': hosts,
         'percentage': percentage,

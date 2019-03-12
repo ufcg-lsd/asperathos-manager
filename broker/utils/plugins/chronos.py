@@ -41,7 +41,7 @@ class ManagerChronos():
                 response = requests.request('GET', url, auth=self.auth)
                 ok = True
             except requests.exceptions.ConnectionError:
-                print (url + ': Connection refused, waiting 5 seconds...')
+                print(url + ': Connection refused, waiting 5 seconds...')
                 time.sleep(5)
         if ok:
             if (response.status_code == 200):
@@ -70,7 +70,7 @@ class ManagerChronos():
                                          auth=self.auth)
                 ok = True
             except requests.exceptions.ConnectionError:
-                print (url + ': Connection refused, waiting 5 seconds...')
+                print(url + ': Connection refused, waiting 5 seconds...')
                 time.sleep(5)
         if ok:
             if (response.status_code == 204):
@@ -95,7 +95,7 @@ class ManagerChronos():
                 response = requests.request('DELETE', url, auth=self.auth)
                 ok = True
             except requests.exceptions.ConnectionError:
-                print (url + ': Connection refused, waiting 5 seconds...')
+                print(url + ': Connection refused, waiting 5 seconds...')
                 time.sleep(5)
         if ok:
             if (response.status_code == 204):
@@ -120,7 +120,7 @@ class ManagerChronos():
                 response = requests.request('PUT', url, auth=self.auth)
                 ok = True
             except requests.exceptions.ConnectionError:
-                print (url + ': Connection refused, waiting 5 seconds...')
+                print(url + ': Connection refused, waiting 5 seconds...')
                 time.sleep(5)
         if ok:
             if (response.status_code == 204):

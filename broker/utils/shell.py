@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from subprocess import *
+import subprocess
 
 R_PREFIX = 'Rscript '
 PYTHON_PREFIX = 'python '
@@ -21,14 +21,15 @@ PYTHON_PREFIX = 'python '
 
 def execute_r_script(script, args):
     command = R_PREFIX + script + " " + " ".join(args)
-    p_status = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
+    p_status = subprocess.Popen(command, shell=True,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = p_status.communicate()
     try:
         print(out, err)
         value = float(out)
         return value
     except Exception as e:
-        print e
+        print(e)
         print("Error message captured:", err)
         raise
 

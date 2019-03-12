@@ -96,20 +96,19 @@ def copy_from_hdfs(remote, key_path, hdfs_address, hdfs_path, local_path):
         '-i %(key_path)s '
         'ubuntu@%(remote)s "%(command)s"' % {'key_path': key_path,
                                              'remote': remote,
-                                             'command': command},
-        shell=True)
+                                             'command': command}, shell=True)
 
 
 def list_directory(key_path, remote, file_path):
     command = 'ls %s' % file_path
 
     ssh = (
-        'ssh -o "StrictHostKeyChecking no" '
-        '-o "UserKnownHostsFile=/dev/null" '
-        '-i %(key_path)s '
-        'ubuntu@%(remote)s "%(command)s"' % {'key_path': key_path,
-                                             'remote': remote,
-                                             'command': command}
+          'ssh -o "StrictHostKeyChecking no" '
+          '-o "UserKnownHostsFile=/dev/null" '
+          '-i %(key_path)s '
+          'ubuntu@%(remote)s "%(command)s"' % {'key_path': key_path,
+                                               'remote': remote,
+                                               'command': command}
     )
 
     process = subprocess.Popen(ssh, shell=True, stdout=subprocess.PIPE,
@@ -131,12 +130,12 @@ def check_file_exists(key_path, hdfs_url, file_path):
     )
 
     ssh = (
-        'ssh -o "StrictHostKeyChecking no" '
-        '-o "UserKnownHostsFile=/dev/null" '
-        '-i %(key_path)s '
-        'ubuntu@%(hdfs_url)s "%(command)s"' % {'key_path': key_path,
-                                               'hdfs_url': hdfs_url,
-                                               'command': command}
+          'ssh -o "StrictHostKeyChecking no" '
+          '-o "UserKnownHostsFile=/dev/null" '
+          '-i %(key_path)s '
+          'ubuntu@%(hdfs_url)s "%(command)s"' % {'key_path': key_path,
+                                                 'hdfs_url': hdfs_url,
+                                                 'command': command}
     )
 
     process = subprocess.Popen(ssh, shell=True, stdout=subprocess.PIPE,

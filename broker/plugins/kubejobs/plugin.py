@@ -18,7 +18,6 @@ import threading
 import time
 import datetime
 import uuid
-import json
 
 from broker.plugins.base import GenericApplicationExecutor
 from broker.plugins import base
@@ -64,7 +63,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             # TODO(clenimar): configure ``timeout`` via a request param,
             # e.g. api.redis_creation_timeout.
             redis_ip, redis_port = self.k8s.provision_redis_or_die(self.app_id)
-            #agent_port = k8s.create_cpu_agent(self.app_id)
+            # agent_port = k8s.create_cpu_agent(self.app_id)
 
             # inject REDIS_HOST in the environment
             data['env_vars']['REDIS_HOST'] = 'redis-%s' % self.app_id
@@ -145,7 +144,8 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             data['monitor_info'].update(
                 {
                     'number_of_jobs': queue_size,
-                    'submission_time': self.starting_time. strftime('%Y-%m-%dT%H:%M:%S.%fGMT'),
+                    'submission_time': self.starting_time.
+                    strftime('%Y-%m-%dT%H:%M:%S.%fGMT'),
                     'redis_ip': redis_ip,
                     'redis_port': redis_port,
                     'enable_visualizer': self.enable_visualizer})  # ,
@@ -228,7 +228,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
     def errors(self):
         try:
             self.rds.ping()
-        except redis.exceptions.ConnectionError as ex:
+        except redis.exceptions.ConnectionError:
             return ()
         return self.rds.lrange("job:errors", 0, -1)
 
@@ -242,7 +242,8 @@ class KubeJobsProvider(base.PluginInterface):
         return 'Kubernetes Batch Jobs Plugin'
 
     def get_description(self):
-        return 'Plugin that allows utilization of Batch Jobs over a k8s cluster'
+        return ('Plugin that allows utilization of '
+                'Batch Jobs over a k8s cluster')
 
     def to_dict(self):
         return {
