@@ -45,7 +45,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
         self.status = "created"
         self.waiting_time = 600
         self.job_completed = False
-        self.terminated = False        
+        self.terminated = False
         self.visualizer_url = "URL not generated!"
         self.k8s = k8s
 
@@ -86,10 +86,10 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             if self.enable_visualizer:
                 # Specify the datasource to be used in the visualization
                 datasource_type = data['visualizer_info']['datasource_type']
-                
+
                 if datasource_type == "influxdb":
                     database_data = k8s.create_influxdb(self.app_id)
-                    
+
                     # Gets the redis ip if the value is not explicit in the config file
                     try:
                         redis_ip = api.redis_ip
@@ -102,7 +102,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
                 data['monitor_info'].update({'datasource_type': datasource_type})
 
-                KUBEJOBS_LOG.log("Creating Visualization plataform")
+                KUBEJOBS_LOG.log("Creating Visualization platform")
 
                 data['visualizer_info'].update({
                                          'enable_visualizer': data['enable_visualizer'],
@@ -110,10 +110,10 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                                          'visualizer_plugin': data['visualizer_plugin'],
                                          'username' : data['username'],
                                          'password': data['password']})
-                
+
                 visualizer.start_visualization(api.visualizer_url,
                                             self.app_id, data['visualizer_info'])
-                
+
                 self.visualizer_url = visualizer.get_visualizer_url(api.visualizer_url,
                                                                     self.app_id)
 
@@ -130,7 +130,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                            data['init_size'], data['env_vars'], config_id=data["config_id"])
 
             self.starting_time = datetime.datetime.now()
-            
+
             # Starting monitor
             data['monitor_info'].update({'number_of_jobs': queue_size,
                                          'submission_time': self.starting_time.\
@@ -188,7 +188,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
     def get_visualizer_url(self):
         return self.visualizer_url
-    
+
     def get_application_execution_time(self):
         if(self.starting_time != None):
             return (datetime.datetime.now() - self.starting_time).total_seconds()
@@ -208,10 +208,10 @@ class KubeJobsExecutor(GenericApplicationExecutor):
         self.k8s.terminate_job(self.app_id)
         self.update_application_state("terminated")
         self.terminated = True
-    
+
     def stop_application(self):
         self.rds.delete("job")
-    
+
     def errors(self):
         try:
             self.rds.ping()
