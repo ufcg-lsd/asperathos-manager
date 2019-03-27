@@ -135,14 +135,14 @@ def get_node_cluster(k8s_conf_path):
     try:
         kube.config.load_kube_config(k8s_conf_path)
         CoreV1Api = kube.client.CoreV1Api()
-
-        node_number = len(CoreV1Api.list_node().items)
-
-        node_info = CoreV1Api.list_node().items[node_number - 1]
+        for node in CoreV1Api.list_node().items:
+            is_ready = \
+                [s for s in node.status.conditions
+                 if s.type == 'Ready'][0].status == 'True'
+            if is_ready:
+                node_info = node
         node_ip = node_info.status.addresses[0].address
-
         return node_ip
-
     except Exception:
         API_LOG.log("Connection with the cluster %s \
                     was not successful" % k8s_conf_path)

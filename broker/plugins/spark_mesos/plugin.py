@@ -137,7 +137,7 @@ class SparkMesosApplicationExecutor(GenericApplicationExecutor):
                 plugin_log.log("%s | Binary downloaded" %
                                (time.strftime("%H:%M:%S")))
 
-            except Exception as e:
+            except Exception:
                 plugin_log.log("%s | Error downloading binary" %
                                (time.strftime("%H:%M:%S")))
                 self.update_application_state("Error")
@@ -235,9 +235,8 @@ class SparkMesosApplicationExecutor(GenericApplicationExecutor):
             self.update_application_state("OK")
             return 'OK'
 
-        except Exception as e:
-            plugin_log.log(e.message)
-            print(e)
+        except Exception:
+            plugin_log.log(Exception)
             self.update_application_state("Error")
 
 

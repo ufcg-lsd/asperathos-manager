@@ -91,6 +91,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
                     # Gets the redis ip if the value is not explicit in the
                     # config file
+
                     try:
                         redis_ip = api.redis_ip
                     except AttributeError:
@@ -105,7 +106,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                 data['monitor_info'].update(
                     {'datasource_type': datasource_type})
 
-                KUBEJOBS_LOG.log("Creating Visualization plataform")
+                KUBEJOBS_LOG.log("Creating Visualization platform")
 
                 data['visualizer_info'].update({
                     'enable_visualizer': data['enable_visualizer'],
