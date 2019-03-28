@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# import time
 import json
 import requests
 
@@ -46,10 +45,12 @@ class ChronosApplicationExecutor(GenericApplicationExecutor):
             chronos = ManagerChronos(url, user, password)
 
             # Obtain arguments
-            # start_job = time.time()
+
+            # Removed variable "start_job" because it's unused
             job = data['info_plugin']['job']
-            deadline = data['info_plugin']['qos']['deadline']  # + start_job
-            job_duration = data['info_plugin']['qos']['duration']  # seconds
+            deadline = data['info_plugin']['qos']['deadline']
+            job_duration = data['info_plugin']['qos']['duration']
+
             # %/100 (e.g 5% --> desv_deadline=0.05 )
             desv_deadline = data['info_plugin']['qos']['desv_deadline']
             jobname = job['name']
@@ -61,7 +62,6 @@ class ChronosApplicationExecutor(GenericApplicationExecutor):
                 'job_duration': job_duration,
                 'deadline': deadline,
                 'desv_deadline': desv_deadline,
-                # 'iterations': int( job['schedule'].split('/')[0][1:] ),
                 'uuid': self.id
 
             }
@@ -89,7 +89,6 @@ class ChronosApplicationExecutor(GenericApplicationExecutor):
             self.id +
             "\"}'")
         job['command'] = updateCommand_1 + job['command'] + updateCommand_2
-        # job['schedule'] = 'R//' + job['schedule'].split('/')[2]
         return job
 
     def init_webhook(self, url_webhook, payload):
