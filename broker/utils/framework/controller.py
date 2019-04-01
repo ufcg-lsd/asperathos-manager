@@ -28,12 +28,14 @@ def start_controller(controller_url, app_id, workers, data):
     controller_body = json.dumps(controller_data)
     requests.post(request_url, data=controller_body, headers=headers)
 
+
 def start_controller_k8s(controller_url, app_id, data):
     request_url = controller_url + '/scaling/' + app_id
     headers = {'Content-type': 'application/json'}
     data.update({"app_id": app_id})
     data = json.dumps(data)
     requests.post(request_url, data=data, headers=headers)
+
 
 def stop_controller(controller_url, app_id):
     stop_scaling_url = controller_url + '/scaling/' + app_id + '/stop'
@@ -46,11 +48,11 @@ def setup_environment(controller_url, instances, cap, data):
     headers = {'Content-type': 'application/json'}
 
     instances_cap = {}
-    
+
     for instance in instances:
-        instances_cap[instance] = cap    
-    
+        instances_cap[instance] = cap
+
     data["instances_cap"] = instances_cap
     data['actuator_plugin'] = data['scaling_parameters']['actuator']
-   
+
     requests.post(setup_enviroment_url, data=json.dumps(data), headers=headers)

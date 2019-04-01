@@ -23,14 +23,16 @@ from broker.plugins import base
 from broker.utils.framework import monitor
 from broker.utils.framework import controller
 from broker.service import api
-from broker.utils.logger import *
+from broker.utils import logger
 from broker.utils.ids import ID_Generator
 from broker.plugins.base import GenericApplicationExecutor
 
 
-LOG = Log("OpenStackGenericPlugin", "logs/openstack_generic_plugin.log")
-application_time_log = Log("Application_time", "logs/application_time.log")
-configure_logging()
+LOG = logger.Log("OpenStackGenericPlugin",
+                 "logs/openstack_generic_plugin.log")
+application_time_log = logger.Log("Application_time",
+                                  "logs/application_time.log")
+logger.configure_logging()
 
 
 class OpenStackApplicationExecutor(GenericApplicationExecutor):
@@ -47,7 +49,7 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
         return state
 
     def update_application_state(self, state):
-        print state
+        print(state)
         with self.state_lock:
             self.application_state = state
 
@@ -85,7 +87,6 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
             app_end_time = 0
 
             LOG.log("Creating instance(s)")
-            print "Creating instance(s)..."
 
             # Create a number of instances to run the application based on
             # cluster_size, image_id, flavor_id and public_key
@@ -94,7 +95,7 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
                                                cluster_size)
 
             LOG.log("Waiting until instance become active...")
-            print "Waiting until instance become active..."
+            print("Waiting until instance become active...")
 
             # Retrive network information from all instances when they
             # reach ACTIVE state
@@ -104,7 +105,7 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
                                                                 instance_id)
                 while instance_status != 'ACTIVE':
                     instance_status = connector.get_instance_status(
-                                          nova, instance_id)
+                        nova, instance_id)
 
                 instance_ips = connector.get_instance_networks(nova,
                                                                instance_id)
@@ -115,7 +116,7 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
             time.sleep(30)
 
             LOG.log("Checking if ssh is available")
-            print "Checking if ssh is available"
+            print("Checking if ssh is available")
 
             # Verify if ssh is available for any ip address for each instance
             instances_ips = []
@@ -133,16 +134,16 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
 
                             except Exception as e:
                                 LOG.log("Fail to connect")
-                                LOG.log(e.message)
+                                LOG.log(e)
 
-                                print "Fail to connect"
-                                print e.message
+                                print("Fail to connect")
+                                print(e)
 
                                 attempts -= 1
                                 time.sleep(30)
 
             LOG.log("Setting up environment")
-            print "Setting up environment"
+            print("Setting up environment")
 
             # Set CPU cap in all instances
             controller.setup_environment(api.controller_url, instances,
@@ -152,7 +153,7 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
             applications = []
             for ip in instances_ips:
                 LOG.log("Executing commands into the instance")
-                print "Executing commands into the instance"
+                print("Executing commands into the instance")
 
                 # TODO Check if exec_command will work without blocking exec
 
@@ -161,7 +162,7 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
                 conn.exec_command(command)
                 app_start_time = time.time()
 
-                app_id = "app-os-generic"+str(uuid.uuid4())[:8]
+                app_id = "app-os-generic" + str(uuid.uuid4())[:8]
                 applications.append(app_id)
 
                 monitor_plugin = monitor_plugin
@@ -174,21 +175,21 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
                 collect_period = 1
                 try:
                     LOG.log("Starting monitoring")
-                    print "Starting monitoring"
+                    print("Starting monitoring")
 
                     monitor.start_monitor(api.monitor_url, app_id,
                                           monitor_plugin, info_plugin,
                                           collect_period)
 
                     LOG.log("Starting scaling")
-                    print "Starting scaling"
-                    
+                    print("Starting scaling")
+
                     controller.start_controller(api.controller_url, app_id,
                                                 instances, data)
 
                 except Exception as e:
-                    LOG.log(e.message)
-                    print e.message
+                    LOG.log(e)
+                    print(e)
 
             # Stop monitor and controller when each application stops
             application_running = True
@@ -203,15 +204,15 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
                     app_end_time = time.time()
 
                     LOG.log("Application finished")
-                    print "Application finished"
+                    print("Application finished")
 
                     for app_id in applications:
                         LOG.log("Stopping monitoring")
-                        print "Stopping monitoring"    
+                        print("Stopping monitoring")
                         monitor.stop_monitor(api.monitor_url, app_id)
 
                         LOG.log("Stopping scaling")
-                        print "Stopping scaling"
+                        print("Stopping scaling")
                         controller.stop_controller(api.controller_url, app_id)
 
                 else:
@@ -220,13 +221,13 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
                 time.sleep(2)
 
             LOG.log("Removing instances...")
-            print "Removing instances..."    
+            print("Removing instances...")
 
             # Remove instances after the end of all applications
             self._remove_instances(nova, connector, instances)
 
             LOG.log("Finished application execution")
-            print "Finished application execution"
+            print("Finished application execution")
 
             application_time = app_end_time - app_start_time
             application_time_log.log("%s|%.0f|%.0f" % (app_id, app_start_time,
@@ -239,8 +240,8 @@ class OpenStackApplicationExecutor(GenericApplicationExecutor):
             return str(application_time)
 
         except Exception as e:
-            LOG.log(e.message)
-            print e.message
+            LOG.log(e)
+            print(e)
             self.update_application_state("Error")
 
     def _create_instances(self, nova, connector, image_id, flavor_id,
@@ -279,7 +280,8 @@ class OpenStackGenericProvider(base.PluginInterface):
         return 'OpenStack Generic Plugin'
 
     def get_description(self):
-        return 'Plugin that allows utilization of generic OpenStack to run jobs'
+        return ('Plugin that allows utilization'
+                'of generic OpenStack to run jobs')
 
     def to_dict(self):
         return {

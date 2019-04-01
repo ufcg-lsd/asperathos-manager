@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ConfigParser
+import configparser
 import kubernetes as kube
 from broker.utils.logger import Log
 
@@ -22,7 +22,7 @@ CONFIG_PATH = "./data/conf"
 
 try:
     # Conf reading
-    config = ConfigParser.RawConfigParser()
+    config = configparser.RawConfigParser()
     config.read('./broker.cfg')
 
     """ Services configuration """
@@ -79,16 +79,20 @@ try:
         user = config.get('spark_sahara', 'user')
         password = config.get('spark_sahara', 'password')
         domain = config.get('spark_sahara', 'user_domain_name')
-        number_of_attempts = config.getint('spark_sahara', 'number_of_attempts')
+        number_of_attempts = config.getint('spark_sahara',
+                                           'number_of_attempts')
         swift_logdir = config.get('spark_sahara', 'swift_logdir')
         remote_hdfs = config.get('spark_sahara', 'remote_hdfs')
-        number_of_attempts = config.getint('spark_sahara', 'number_of_attempts')
-        dummy_opportunistic = config.getboolean('spark_sahara', 'dummy_opportunistic')
+        number_of_attempts = config.getint('spark_sahara',
+                                           'number_of_attempts')
+        dummy_opportunistic = config.getboolean('spark_sahara',
+                                                'dummy_opportunistic')
         hosts = config.get('spark_sahara', 'hosts').split(',')
 
     if 'spark_generic' in plugins:
         key_path = config.get('spark_generic', 'key_path')
-        number_of_attempts = config.getint('spark_generic', 'number_of_attempts')
+        number_of_attempts = config.getint('spark_generic',
+                                           'number_of_attempts')
         remote_hdfs = config.get('spark_generic', 'remote_hdfs')
         masters_ips = config.get('spark_generic', 'masters_ips').split(' ')
 
@@ -113,7 +117,9 @@ except Exception as e:
     API_LOG.log("Error: %s" % e.message)
     quit()
 
-""" Gets the IP address of one slave node contained
+
+def get_node_cluster(k8s_conf_path):
+    """ Gets the IP address of one slave node contained
     in a Kubernetes cluster. The k8s API aways returns information
     about the master node followed by the information of the slaves.
     Therefore, in order to avoid get the IP of the master node,
@@ -126,15 +132,17 @@ except Exception as e:
     Returns:
         string -- The node IP
     """
-def get_node_cluster(k8s_conf_path):
     try:
         kube.config.load_kube_config(k8s_conf_path)
         CoreV1Api = kube.client.CoreV1Api()
         for node in CoreV1Api.list_node().items:
-            is_ready = [s for s in node.status.conditions if s.type == 'Ready'][0].status == 'True'
+            is_ready = \
+                [s for s in node.status.conditions
+                 if s.type == 'Ready'][0].status == 'True'
             if is_ready:
                 node_info = node
         node_ip = node_info.status.addresses[0].address
         return node_ip
     except Exception:
-        API_LOG.log("Connection with the cluster %s was not successful" % k8s_conf_path)
+        API_LOG.log("Connection with the cluster %s \
+                    was not successful" % k8s_conf_path)

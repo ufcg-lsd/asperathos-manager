@@ -65,6 +65,7 @@ class NotFoundException(SaharaException):
 class RemoteCommandException(SaharaException):
     code = "REMOTE_COMMAND_FAILED"
     message_template = "Error during command execution: \"%s\""
+
     def __init__(self, cmd, ret_code=None, stdout=None,
                  stderr=None):
         self.cmd = cmd
@@ -131,6 +132,7 @@ class BadRequestException(Exception):
 
     def __init__(self, message="Malformed message body"):
         message = message
+
 
 class MalformedRequestBody(SaharaException):
     code = "MALFORMED_REQUEST_BODY"

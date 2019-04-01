@@ -18,7 +18,6 @@ import threading
 import time
 import datetime
 import uuid
-import json
 
 from broker.plugins.base import GenericApplicationExecutor
 from broker.plugins import base
@@ -54,7 +53,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
             # Download files that contains the items
             jobs = requests.get(data['redis_workload']).text.\
-                                split('\n')[:-1]
+                split('\n')[:-1]
 
             # If the cluster name is informed in data, active the cluster
             if('cluster_name' in data.keys()):
@@ -64,7 +63,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             # TODO(clenimar): configure ``timeout`` via a request param,
             # e.g. api.redis_creation_timeout.
             redis_ip, redis_port = self.k8s.provision_redis_or_die(self.app_id)
-            #agent_port = k8s.create_cpu_agent(self.app_id)
+            # agent_port = k8s.create_cpu_agent(self.app_id)
 
             # inject REDIS_HOST in the environment
             data['env_vars']['REDIS_HOST'] = 'redis-%s' % self.app_id
@@ -74,7 +73,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             data['env_vars']['SCONE_CONFIG_ID'] = data['config_id']
 
             # create a new Redis client and fill the work queue
-            if(self.rds == None):
+            if(self.rds is None):
                 self.rds = redis.StrictRedis(host=redis_ip, port=redis_port)
 
             queue_size = len(jobs)
@@ -90,34 +89,41 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                 if datasource_type == "influxdb":
                     database_data = k8s.create_influxdb(self.app_id)
 
-                    # Gets the redis ip if the value is not explicit in the config file
+                    # Gets the redis ip if the value is not explicit in the
+                    # config file
+
                     try:
                         redis_ip = api.redis_ip
                     except AttributeError:
                         redis_ip = api.get_node_cluster(api.k8s_conf_path)
 
                     database_data.update({"url": redis_ip})
-                    data['monitor_info'].update({'database_data': database_data})
-                    data['visualizer_info'].update({'database_data': database_data})
+                    data['monitor_info'].update(
+                        {'database_data': database_data})
+                    data['visualizer_info'].update(
+                        {'database_data': database_data})
 
-                data['monitor_info'].update({'datasource_type': datasource_type})
+                data['monitor_info'].update(
+                    {'datasource_type': datasource_type})
 
                 KUBEJOBS_LOG.log("Creating Visualization platform")
 
                 data['visualizer_info'].update({
-                                         'enable_visualizer': data['enable_visualizer'],
-                                         'plugin': data['monitor_plugin'],
-                                         'visualizer_plugin': data['visualizer_plugin'],
-                                         'username' : data['username'],
-                                         'password': data['password']})
+                    'enable_visualizer': data['enable_visualizer'],
+                    'plugin': data['monitor_plugin'],
+                    'visualizer_plugin': data['visualizer_plugin'],
+                    'username': data['username'],
+                    'password': data['password']})
 
-                visualizer.start_visualization(api.visualizer_url,
-                                            self.app_id, data['visualizer_info'])
+                visualizer.start_visualization(
+                    api.visualizer_url, self.app_id, data['visualizer_info'])
 
-                self.visualizer_url = visualizer.get_visualizer_url(api.visualizer_url,
-                                                                    self.app_id)
+                self.visualizer_url = visualizer.get_visualizer_url(
+                    api.visualizer_url, self.app_id)
 
-                KUBEJOBS_LOG.log("Dashboard of the job created on: %s" % (self.visualizer_url))
+                KUBEJOBS_LOG.log(
+                    "Dashboard of the job created on: %s" %
+                    (self.visualizer_url))
 
             KUBEJOBS_LOG.log("Creating Redis queue")
             for job in jobs:
@@ -125,20 +131,26 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
             KUBEJOBS_LOG.log("Creating Job")
 
-            self.k8s.create_job(self.app_id,
-                           data['cmd'], data['img'],
-                           data['init_size'], data['env_vars'], config_id=data["config_id"])
+            self.k8s.create_job(
+                self.app_id,
+                data['cmd'],
+                data['img'],
+                data['init_size'],
+                data['env_vars'],
+                config_id=data["config_id"])
 
             self.starting_time = datetime.datetime.now()
 
             # Starting monitor
-            data['monitor_info'].update({'number_of_jobs': queue_size,
-                                         'submission_time': self.starting_time.\
-                                                 strftime('%Y-%m-%dT%H:%M:%S.%fGMT'),
-                                         'redis_ip': redis_ip,
-                                         'redis_port': redis_port,
-                                         'enable_visualizer': self.enable_visualizer})#,
-                                         #'cpu_agent_port': agent_port})
+            data['monitor_info'].update(
+                {
+                    'number_of_jobs': queue_size,
+                    'submission_time': self.starting_time.
+                    strftime('%Y-%m-%dT%H:%M:%S.%fGMT'),
+                    'redis_ip': redis_ip,
+                    'redis_port': redis_port,
+                    'enable_visualizer': self.enable_visualizer})  # ,
+            # 'cpu_agent_port': agent_port})
 
             monitor.start_monitor(api.monitor_url, self.app_id,
                                   data['monitor_plugin'],
@@ -147,7 +159,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             # Starting controller
             data.update({'redis_ip': redis_ip, 'redis_port': redis_port})
             controller.start_controller_k8s(api.controller_url,
-                                             self.app_id, data)
+                                            self.app_id, data)
 
             while not self.job_completed and not self.terminated:
                 self.update_application_state("ongoing")
@@ -164,8 +176,8 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             time.sleep(float(self.waiting_time))
 
             if self.enable_visualizer:
-                visualizer.stop_visualization(api.visualizer_url,
-                                                self.app_id, data['visualizer_info'])
+                visualizer.stop_visualization(
+                    api.visualizer_url, self.app_id, data['visualizer_info'])
             monitor.stop_monitor(api.monitor_url, self.app_id)
             controller.stop_controller(api.controller_url, self.app_id)
 
@@ -190,13 +202,15 @@ class KubeJobsExecutor(GenericApplicationExecutor):
         return self.visualizer_url
 
     def get_application_execution_time(self):
-        if(self.starting_time != None):
-            return (datetime.datetime.now() - self.starting_time).total_seconds()
+        if(self.starting_time is not None):
+            return (
+                datetime.datetime.now() -
+                self.starting_time).total_seconds()
         else:
             return "Job is not running yet!"
 
     def get_application_start_time(self):
-        if(self.starting_time != None):
+        if(self.starting_time is not None):
             return self.starting_time.strftime('%Y-%m-%dT%H:%M:%S.%fGMT')
         else:
             return "Job is not running yet!"
@@ -215,9 +229,10 @@ class KubeJobsExecutor(GenericApplicationExecutor):
     def errors(self):
         try:
             self.rds.ping()
-        except redis.exceptions.ConnectionError as ex:
+        except redis.exceptions.ConnectionError:
             return ()
         return self.rds.lrange("job:errors", 0, -1)
+
 
 class KubeJobsProvider(base.PluginInterface):
 
@@ -228,7 +243,8 @@ class KubeJobsProvider(base.PluginInterface):
         return 'Kubernetes Batch Jobs Plugin'
 
     def get_description(self):
-        return 'Plugin that allows utilization of Batch Jobs over a k8s cluster'
+        return ('Plugin that allows utilization of '
+                'Batch Jobs over a k8s cluster')
 
     def to_dict(self):
         return {

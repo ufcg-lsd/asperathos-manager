@@ -22,10 +22,10 @@ from influxdb import InfluxDBClient
 from broker.utils.logger import Log
 
 KUBEJOBS_LOG = Log("KubeJobsPlugin", "logs/kubejobs.log")
-import requests
+
 
 def create_job(app_id, cmd, img, init_size, env_vars,
-               config_id="", 
+               config_id="",
                cas_addr="",
                scone_heap="200M",
                las_addr="172.17.0.1:18766",
@@ -40,7 +40,7 @@ def create_job(app_id, cmd, img, init_size, env_vars,
 
     obj_meta = kube.client.V1ObjectMeta(
         name=app_id)
-    
+
     envs = []
 
     for key in env_vars.keys():
@@ -96,8 +96,8 @@ def create_job(app_id, cmd, img, init_size, env_vars,
     return job
 
 
-
-def provision_redis_or_die(app_id, namespace="default", redis_port=6379, timeout=60):
+def provision_redis_or_die(app_id, namespace="default",
+                           redis_port=6379, timeout=60):
     """Provision a redis database for the workload being executed.
 
     Create a redis-master Pod and expose it through a NodePort Service.
@@ -190,7 +190,8 @@ def provision_redis_or_die(app_id, namespace="default", redis_port=6379, timeout
             r = redis.StrictRedis(host=redis_ip, port=node_port)
             if r.info()['loading'] == 0:
                 redis_ready = True
-                KUBEJOBS_LOG.log("connected to redis on %s:%s!" % (redis_ip, node_port))
+                KUBEJOBS_LOG.log("connected to redis on %s:%s!"
+                                 % (redis_ip, node_port))
                 break
         except redis.exceptions.ConnectionError:
             KUBEJOBS_LOG.log("redis is not ready yet")
@@ -205,10 +206,12 @@ def provision_redis_or_die(app_id, namespace="default", redis_port=6379, timeout
         # die!
         raise Exception("Could not provision redis")
 
+
 def completed(app_id, namespace="default"):
     job_api = kube.client.BatchV1Api()
     job = job_api.read_namespaced_job_status(name=app_id, namespace=namespace)
-    return job.status.completion_time != None
+    return job.status.completion_time is not None
+
 
 def delete_redis_resources(app_id, namespace="default"):
     """Delete redis resources (Pod and Service) for a given ``app_id``"""
@@ -227,21 +230,23 @@ def delete_redis_resources(app_id, namespace="default"):
     CoreV1Api.delete_namespaced_service(
         name=name, namespace=namespace, body=delete)
 
+
 def terminate_job(app_id, namespace="default"):
 
     kube.config.load_kube_config(api.k8s_conf_path)
 
     batch_v1 = kube.client.BatchV1Api()
-    
+
     delete = kube.client.V1DeleteOptions(propagation_policy='Foreground')
 
     delete_redis_resources(app_id)
     batch_v1.delete_namespaced_job(
         name=app_id, namespace=namespace, body=delete)
 
+
 def create_influxdb(app_id, database_name="asperathos",
-                 img="influxdb", namespace="default", 
-                 visualizer_port=8086, timeout=60):
+                    img="influxdb", namespace="default",
+                    visualizer_port=8086, timeout=60):
 
     kube.config.load_kube_config(api.k8s_conf_path)
 
@@ -256,7 +261,7 @@ def create_influxdb(app_id, database_name="asperathos",
         },
         "spec": {
             "containers": [{
-                "name": "influxdb-master", 
+                "name": "influxdb-master",
                 "image": img,
                 "env": [{
                     "name": "MASTER",
@@ -299,34 +304,39 @@ def create_influxdb(app_id, database_name="asperathos",
         redis_ip = api.redis_ip
     except AttributeError:
         redis_ip = api.get_node_cluster(api.k8s_conf_path)
-    
+
     try:
         KUBEJOBS_LOG.log("Creating InfluxDB Pod...")
         CoreV1Api.create_namespaced_pod(
             namespace=namespace, body=influx_pod_spec)
-        KUBEJOBS_LOG.log("Creating InfluxDB Service...") 
+        KUBEJOBS_LOG.log("Creating InfluxDB Service...")
         s = CoreV1Api.create_namespaced_service(
             namespace=namespace, body=influx_svc_spec)
         ready = False
         attempts = timeout
         while not ready:
-            read = CoreV1Api.read_namespaced_pod_status(name="influxdb-%s" % app_id, namespace=namespace)
+            read = CoreV1Api.read_namespaced_pod_status(name="influxdb-%s"
+                                                        % app_id,
+                                                        namespace=namespace)
             node_port = s.spec.ports[0].node_port
 
-            if read.status.phase == "Running" and node_port != None:
+            if read.status.phase == "Running" and node_port is not None:
                 try:
-                    #TODO change redis_ip to node_ip
-                    client = InfluxDBClient(redis_ip, node_port, 'root', 'root', database_name)
+                    # TODO change redis_ip to node_ip
+                    client = InfluxDBClient(redis_ip, node_port, 'root',
+                                            'root', database_name)
                     client.create_database(database_name)
                     KUBEJOBS_LOG.log("InfluxDB is ready!!")
                     ready = True
-                except Exception as e:
+                except Exception:
                     KUBEJOBS_LOG.log("InfluxDB is not ready yet...")
             else:
                 attempts -= 1
-                if attempts > 0: 
-                    time.sleep(1)                    
-                else: raise Exception("InfluxDB cannot be started! Time limite exceded...")
+                if attempts > 0:
+                    time.sleep(1)
+                else:
+                    raise Exception("InfluxDB cannot be started!"
+                                    "Time limite exceded...")
             time.sleep(1)
 
         influxdb_data = {"port": node_port, "name": database_name}

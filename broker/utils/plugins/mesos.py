@@ -20,7 +20,7 @@ import json
 def extract_vms_ids(output):
     lines = output.split('\n')
     ids = []
-    for i in range(1, len(lines)-1):
+    for i in range(1, len(lines) - 1):
         ids.append(lines[i].split()[0])
 
     return ids
@@ -36,7 +36,7 @@ def get_executors_ip(conn, get_frameworks_url, app_id):
         output = stdout.read()
         mesos_resp = json.loads(output)
     except Exception as e:
-        print e.message
+        print(e)
         mesos_resp = {}
 
     executors_ips = []

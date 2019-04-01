@@ -20,7 +20,7 @@ from werkzeug import datastructures
 
 from broker import exceptions as ex
 from broker.utils import serializer as u_serializer
-from broker.utils.logger import *
+from broker.utils.logger import Log
 
 
 LOG = Log("UtilsAPI", "logs/utilsapi.log")
@@ -71,7 +71,8 @@ class Rest(flask.Blueprint):
                     flask.request.status_code = status
 
                 try:
-                    if flask.request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+                    if flask.request.method in ['POST', 'PUT',
+                                                'PATCH', 'DELETE']:
                         kwargs['data'] = request_data()
                     return func(**kwargs)
                 except ex.UnauthorizedException as e:

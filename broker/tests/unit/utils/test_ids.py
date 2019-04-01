@@ -21,11 +21,13 @@ from broker.utils.ids import ID_Generator
 Class that represents the tests of the ID Generator
 """
 
+
 class TestIDGenerator(unittest.TestCase):
 
     """
     Set up IDGenerator objects
-    """    
+    """
+
     def setUp(self):
         self.obj1 = ID_Generator()
 

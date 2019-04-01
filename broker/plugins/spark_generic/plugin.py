@@ -219,7 +219,7 @@ class SparkGenericApplicationExecutor(GenericApplicationExecutor):
                         {'dependencies': dependencies,
                          'main_class': main_class,
                          'master': remote_instance,
-                         'job_binary_file': 'file://'+job_binary_file,
+                         'job_binary_file': 'file://' + job_binary_file,
                          'args': args_line})
 
         if main_class == '':
@@ -300,7 +300,7 @@ class SparkGenericProvider(base.PluginInterface):
         self.update_running_clusters()
 
         for ip in api.masters_ips:
-            if ip not in masters:
+            if ip not in self.masters:
                 self.masters[ip] = False
 
         set_masters = set(self.masters.values())
@@ -320,10 +320,10 @@ class SparkGenericProvider(base.PluginInterface):
             executor = SparkGenericApplicationExecutor(app_id, master_ip)
 
             handling_thread = threading.Thread(
-                        target=executor.start_application,
-                        args=(data,
-                              self.spark_applications_ids,
-                              app_id)
+                target=executor.start_application,
+                args=(data,
+                      self.spark_applications_ids,
+                      app_id)
             )
 
             handling_thread.start()

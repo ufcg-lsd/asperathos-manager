@@ -62,7 +62,7 @@ class SparkMesosApplicationExecutor(GenericApplicationExecutor):
         try:
             self.update_application_state("Running")
             plugin_log.log("%s | Starting application execution" %
-                          (time.strftime("%H:%M:%S")))
+                           (time.strftime("%H:%M:%S")))
 
             binary_url = str(data['binary_url'])
             execution_class = str(data['execution_class'])
@@ -92,17 +92,17 @@ class SparkMesosApplicationExecutor(GenericApplicationExecutor):
                 optimizer_command = ' --total-executor-cores %d ' % cores
 
             plugin_log.log("%s | Submission id: %s" %
-                          (time.strftime("%H:%M:%S"), self.app_id))
+                           (time.strftime("%H:%M:%S"), self.app_id))
 
             plugin_log.log("%s | Connecting with Mesos cluster..." %
-                          (time.strftime("%H:%M:%S")))
+                           (time.strftime("%H:%M:%S")))
 
             conn = ssh.get_connection(api.mesos_url, api.cluster_username,
                                       api.cluster_password,
                                       api.cluster_key_path)
 
             plugin_log.log("%s | Connected with Mesos cluster" %
-                          (time.strftime("%H:%M:%S")))
+                           (time.strftime("%H:%M:%S")))
 
             # Execute all the spark needed commands
             # to run an spark job from command line
@@ -122,24 +122,24 @@ class SparkMesosApplicationExecutor(GenericApplicationExecutor):
                              + '%s %s %s')
 
             plugin_log.log("%s | Download the binary to cluster" %
-                          (time.strftime("%H:%M:%S")))
+                           (time.strftime("%H:%M:%S")))
 
             try:
                 stdin, stdout, stderr = conn.exec_command('wget %s -O %s' %
-                                                         (binary_url,
-                                                          binary_path))
+                                                          (binary_url,
+                                                           binary_path))
 
                 plugin_log.log("%s | Waiting for download the binary..." %
-                              (time.strftime("%H:%M:%S")))
+                               (time.strftime("%H:%M:%S")))
 
                 # TODO: Fix possible wget error
                 stdout.read()
                 plugin_log.log("%s | Binary downloaded" %
-                              (time.strftime("%H:%M:%S")))
+                               (time.strftime("%H:%M:%S")))
 
-            except Exception as e:
+            except Exception:
                 plugin_log.log("%s | Error downloading binary" %
-                              (time.strftime("%H:%M:%S")))
+                               (time.strftime("%H:%M:%S")))
                 self.update_application_state("Error")
                 return "Error"
 
@@ -191,53 +191,52 @@ class SparkMesosApplicationExecutor(GenericApplicationExecutor):
                         break
 
             plugin_log.log("%s | Executors IDs: %s" %
-                          (time.strftime("%H:%M:%S"), executors_vms_ids))
+                           (time.strftime("%H:%M:%S"), executors_vms_ids))
 
             # Set up the initial configuration of cpu cap
             controller.setup_environment(api.controller_url, executors_vms_ids,
-                                     starting_cap, data)
+                                         starting_cap, data)
 
             info_plugin = {"spark_submisson_url": master,
                            "expected_time": expected_time,
                            "number_of_jobs": number_of_jobs}
 
             plugin_log.log("%s | Starting monitor" %
-                          (time.strftime("%H:%M:%S")))
+                           (time.strftime("%H:%M:%S")))
             monitor.start_monitor(api.monitor_url, self.app_id,
                                   'spark-mesos', info_plugin, 2)
 
             plugin_log.log("%s | Starting controller" %
-                          (time.strftime("%H:%M:%S")))
+                           (time.strftime("%H:%M:%S")))
             controller.start_controller(api.controller_url,
-                                self.app_id,
-                                executors_vms_ids,
-                                data)
+                                        self.app_id,
+                                        executors_vms_ids,
+                                        data)
 
             # This command locks the plugin execution
             # until the execution be done
-            print o.read()
+            print(o.read())
 
             plugin_log.log("%s | Stopping monitor" %
-                          (time.strftime("%H:%M:%S")))
+                           (time.strftime("%H:%M:%S")))
             monitor.stop_monitor(api.monitor_url, self.app_id)
 
             plugin_log.log("%s | Stopping controller" %
-                          (time.strftime("%H:%M:%S")))
+                           (time.strftime("%H:%M:%S")))
             controller.stop_controller(api.controller_url, self.app_id)
 
             plugin_log.log("%s | Remove binaries" %
-                          (time.strftime("%H:%M:%S")))
+                           (time.strftime("%H:%M:%S")))
             conn.exec_command('rm -rf ~/exec_bin.*')
 
             plugin_log.log("%s | Finished application execution" %
-                          (time.strftime("%H:%M:%S")))
+                           (time.strftime("%H:%M:%S")))
 
             self.update_application_state("OK")
             return 'OK'
 
-        except Exception as e:
-            plugin_log.log(e.message)
-            print e.message
+        except Exception:
+            plugin_log.log(Exception)
             self.update_application_state("Error")
 
 

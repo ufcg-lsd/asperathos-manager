@@ -21,7 +21,6 @@ from stevedore import enabled
 from broker import exceptions as ex
 from broker.service import api
 from broker.utils.logger import Log
-import threading
 
 
 LOG = Log("Servicev10", "logs/serviceAPIv10.log")
@@ -128,7 +127,7 @@ class ApplicationExecutor(object):
     @required
     def get_application_state(self):
         pass
-    
+
     @required
     def terminate_job(self):
         pass
@@ -153,14 +152,14 @@ class GenericApplicationExecutor(ApplicationExecutor):
 
     def get_application_state(self):
         pass
-    
+
     def terminate_job(self):
         pass
 
     def update_application_state(self, state):
         pass
 
-    def stop_application(self,redis):
+    def stop_application(self, redis):
         pass
 
     def get_application_execution_time(self):

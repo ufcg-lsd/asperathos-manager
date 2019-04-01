@@ -29,15 +29,14 @@ def get_running_app(submission_url, applications, number_of_attempts):
                                    ':4040/api/v1/applications?status=running')
 
             for app in all_app.json():
-                if app['attempts'][0]['completed'] == False:
+                if app['attempts'][0]['completed'] is False:
                     if app['id'] not in applications:
-                        print app['id']
-                        return app['id']#, app['name']
-        except:
+                        print(app['id'])
+                        return app['id']
+        except Exception:
             if attempts > number_of_attempts:
                 return None
             else:
                 time.sleep(1)
                 attempts = attempts + 1
                 pass
-
