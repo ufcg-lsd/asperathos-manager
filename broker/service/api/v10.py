@@ -17,7 +17,6 @@ import os
 import shutil
 import socket
 import filecmp
-import json
 
 from broker.plugins import base as plugin_base
 from broker.service import api
@@ -61,7 +60,8 @@ def run_submission(data):
         submission_data = data['plugin_info']
         submission_data['enable_auth'] = data['enable_auth']
         submission_id, executor = plugin.execute(submission_data)
-        
+        submissions[submission_id] = executor
+
         return {"job_id": submission_id}
 
 

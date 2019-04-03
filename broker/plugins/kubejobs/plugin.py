@@ -18,7 +18,6 @@ import threading
 import time
 import datetime
 import uuid
-import json
 
 from broker.service import api
 from broker.plugins.base import GenericApplicationExecutor
@@ -262,6 +261,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             
             self.obj_representation = atual_representation
         self.persist_state()
+
 
 
 class KubeJobsProvider(base.PluginInterface):
