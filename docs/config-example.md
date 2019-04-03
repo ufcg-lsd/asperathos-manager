@@ -12,6 +12,11 @@ authorization_url =
 port =
 plugins = plugin1,plugin2,plugin3
 
+[persistence]
+persistence_name =
+persistence_ip =
+persistence_port
+
 [plugin1]
 p1_info1 = 
 p1_info2 =

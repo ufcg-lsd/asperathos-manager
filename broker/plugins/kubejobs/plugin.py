@@ -18,9 +18,13 @@ import threading
 import time
 import datetime
 import uuid
+import json
 
+from broker.service import api
 from broker.plugins.base import GenericApplicationExecutor
+from broker.persistence.etcd_db.plugin import Etcd3Persistence
 from broker.plugins import base
+from broker.utils.timer import set_timeout
 from broker.utils.ids import ID_Generator
 from broker.utils.logger import Log
 from broker.utils.plugins import k8s
@@ -47,10 +51,26 @@ class KubeJobsExecutor(GenericApplicationExecutor):
         self.terminated = False
         self.visualizer_url = "URL not generated!"
         self.k8s = k8s
+        self.obj_representation = None
+        self.persistence_obj = None
+
+    def __repr__(self):
+
+        return json.dumps({
+            "app_id": self.app_id,
+            "starting_time": self.starting_time,
+            "status": self.status,
+            "waiting_time": self.waiting_time,
+            "visualizer_url": self.visualizer_url
+        })
 
     def start_application(self, data):
         try:
+            if (api.persistence_name == "etcd"):
+                self.persistence_obj = \
+                    Etcd3Persistence(api.persistence_ip, api.persistence_port)
 
+            self.persist_state()
             # Download files that contains the items
             jobs = requests.get(data['redis_workload']).text.\
                 split('\n')[:-1]
@@ -232,6 +252,16 @@ class KubeJobsExecutor(GenericApplicationExecutor):
         except redis.exceptions.ConnectionError:
             return ()
         return self.rds.lrange("job:errors", 0, -1)
+    
+    @set_timeout(1.0)
+    def persist_state(self):
+        atual_representation = self.__repr__()
+        if self.obj_representation != atual_representation:
+            self.persistence_obj.\
+                persist_state(self.app_id, atual_representation)
+            
+            self.obj_representation = atual_representation
+        self.persist_state()
 
 
 class KubeJobsProvider(base.PluginInterface):
