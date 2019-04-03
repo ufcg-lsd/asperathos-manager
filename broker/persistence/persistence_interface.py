@@ -16,8 +16,10 @@
 import abc
 import six
 
+
 def required(fun):
     return abc.abstractmethod(fun)
+
 
 @six.add_metaclass(abc.ABCMeta)
 class PersistenceInterface(object):

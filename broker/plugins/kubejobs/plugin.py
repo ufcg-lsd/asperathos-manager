@@ -18,7 +18,9 @@ import threading
 import time
 import datetime
 import uuid
+import json
 
+from broker.service.api import v10
 from broker.service import api
 from broker.plugins.base import GenericApplicationExecutor
 from broker.persistence.etcd_db.plugin import Etcd3Persistence
@@ -30,8 +32,6 @@ from broker.utils.plugins import k8s
 from broker.utils.framework import monitor
 from broker.utils.framework import controller
 from broker.utils.framework import visualizer
-from broker.service import api
-from broker.service.api import v10
 
 KUBEJOBS_LOG = Log("KubeJobsPlugin", "logs/kubejobs.log")
 application_time_log = Log("Application_time", "logs/application_time.log")
@@ -209,6 +209,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                 self.k8s.terminate_job(self.app_id)
 
         except Exception as ex:
+            self.terminated = True
             self.update_application_state("error")
             KUBEJOBS_LOG.log("ERROR: %s" % ex)
 
@@ -251,17 +252,18 @@ class KubeJobsExecutor(GenericApplicationExecutor):
         except redis.exceptions.ConnectionError:
             return ()
         return self.rds.lrange("job:errors", 0, -1)
-    
+
     @set_timeout(1.0)
     def persist_state(self):
-        atual_representation = self.__repr__()
-        if self.obj_representation != atual_representation:
+        obj_representation = self.__repr__()
+        if self.obj_representation != obj_representation:
             self.persistence_obj.\
-                persist_state(self.app_id, atual_representation)
-            
-            self.obj_representation = atual_representation
-        self.persist_state()
+                persist_state(self.app_id, obj_representation)
 
+            self.obj_representation = obj_representation
+
+        if not self.job_completed and not self.terminated:
+            self.persist_state()
 
 
 class KubeJobsProvider(base.PluginInterface):

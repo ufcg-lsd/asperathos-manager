@@ -17,6 +17,7 @@ from broker.persistence.persistence_interface import PersistenceInterface
 
 import etcd3
 
+
 class Etcd3Persistence(PersistenceInterface):
 
     def __init__(self, ip, port):
@@ -25,7 +26,6 @@ class Etcd3Persistence(PersistenceInterface):
             etcd3.client(str(ip), str(port))
 
     def persist_state(self, app_id, state):
-        
+
         self.etcd_connection.\
                 put(str(app_id), state)
-        

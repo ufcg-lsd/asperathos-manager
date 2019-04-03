@@ -42,7 +42,6 @@ try:
         if plugin != '' and plugin not in config.sections():
             raise Exception("plugin '%s' section missing" % plugin)
 
-
     if 'persistence' in config.sections():
         persistence_name = config.get('persistence', 'persistence_name')
         persistence_ip = config.get('persistence', 'persistence_ip')
