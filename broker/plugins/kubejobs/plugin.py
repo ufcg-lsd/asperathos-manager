@@ -20,55 +20,62 @@ import datetime
 import uuid
 import json
 
-from broker.service.api import v10
 from broker.service import api
-from broker.plugins.base import GenericApplicationExecutor
-from broker.persistence.etcd_db.plugin import Etcd3Persistence
 from broker.plugins import base
+from broker.persistence.etcd_db import plugin as etcd
 from broker.utils.timer import set_timeout
-from broker.utils.ids import ID_Generator
-from broker.utils.logger import Log
+from broker.utils import ids
+from broker.utils import logger
 from broker.utils.plugins import k8s
-from broker.utils.framework import monitor
-from broker.utils.framework import controller
-from broker.utils.framework import visualizer
+from broker.utils import framework
 
-KUBEJOBS_LOG = Log("KubeJobsPlugin", "logs/kubejobs.log")
-application_time_log = Log("Application_time", "logs/application_time.log")
+KUBEJOBS_LOG = logger.Log("KubeJobsPlugin", "logs/kubejobs.log")
+application_time_log = logger.Log("Application_time", "logs/application_time.log")
 
 
-class KubeJobsExecutor(GenericApplicationExecutor):
+class KubeJobsExecutor(base.GenericApplicationExecutor):
 
-    def __init__(self, app_id):
-        self.id = ID_Generator().get_ID()
+    def __init__(self, app_id, starting_time=None,
+                 redis=None, status='created',
+                 waiting_time=600, job_completed=False,
+                 terminated=False,
+                 visualizer_url="URL not generated!",
+                 obj_representation = None,
+                 persistence_obj=None):
+
+        self.id = ids.ID_Generator().get_ID()
         self.app_id = app_id
-        self.starting_time = None
-        self.rds = None
-        self.status = "created"
-        self.waiting_time = 600
-        self.job_completed = False
-        self.terminated = False
-        self.visualizer_url = "URL not generated!"
+        self.starting_time = starting_time
+        self.rds = redis
+        self.status = status
+        self.waiting_time = waiting_time
+        self.job_completed = job_completed
+        self.terminated = terminated
+        self.visualizer_url = visualizer_url
         self.k8s = k8s
-        self.obj_representation = None
-        self.persistence_obj = None
+        self.obj_representation = obj_representation
+        self.persistence_obj = persistence_obj
 
     def __repr__(self):
-
         return json.dumps({
             "app_id": self.app_id,
             "starting_time": self.starting_time,
             "status": self.status,
-            "waiting_time": self.waiting_time,
             "visualizer_url": self.visualizer_url
         })
+
+    def __reduce__(self):
+        return (rebuild, (self.app_id,
+                          self.starting_time,
+                          self.status,
+                          self.visualizer_url))
 
     def start_application(self, data):
         try:
             if (api.persistence_name == "etcd"):
                 self.persistence_obj = \
-                    Etcd3Persistence(api.persistence_ip, api.persistence_port)
-
+                    etcd.Etcd3Persistence(api.persistence_ip,
+                                          api.persistence_port)
             self.persist_state()
             # Download files that contains the items
             jobs = requests.get(data['redis_workload']).text.\
@@ -76,7 +83,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
             # If the cluster name is informed in data, active the cluster
             if('cluster_name' in data.keys()):
-                v10.activate_cluster(data['cluster_name'], data)
+                api.v10.activate_cluster(data['cluster_name'], data)
 
             # Provision a redis database for the job. Die in case of error.
             # TODO(clenimar): configure ``timeout`` via a request param,
@@ -134,10 +141,10 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                     'username': data['username'],
                     'password': data['password']})
 
-                visualizer.start_visualization(
+                framework.visualizer.start_visualization(
                     api.visualizer_url, self.app_id, data['visualizer_info'])
 
-                self.visualizer_url = visualizer.get_visualizer_url(
+                self.visualizer_url = framework.visualizer.get_visualizer_url(
                     api.visualizer_url, self.app_id)
 
                 KUBEJOBS_LOG.log(
@@ -171,13 +178,13 @@ class KubeJobsExecutor(GenericApplicationExecutor):
                     'enable_visualizer': self.enable_visualizer})  # ,
             # 'cpu_agent_port': agent_port})
 
-            monitor.start_monitor(api.monitor_url, self.app_id,
+            framework.monitor.start_monitor(api.monitor_url, self.app_id,
                                   data['monitor_plugin'],
                                   data['monitor_info'], 2)
 
             # Starting controller
             data.update({'redis_ip': redis_ip, 'redis_port': redis_port})
-            controller.start_controller_k8s(api.controller_url,
+            framework.controller.start_controller_k8s(api.controller_url,
                                             self.app_id, data)
 
             while not self.job_completed and not self.terminated:
@@ -195,10 +202,10 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             time.sleep(float(self.waiting_time))
 
             if self.enable_visualizer:
-                visualizer.stop_visualization(
+                framework.visualizer.stop_visualization(
                     api.visualizer_url, self.app_id, data['visualizer_info'])
-            monitor.stop_monitor(api.monitor_url, self.app_id)
-            controller.stop_controller(api.controller_url, self.app_id)
+            framework.monitor.stop_monitor(api.monitor_url, self.app_id)
+            framework.controller.stop_controller(api.controller_url, self.app_id)
 
             self.visualizer_url = "Url is dead!"
 
@@ -241,7 +248,6 @@ class KubeJobsExecutor(GenericApplicationExecutor):
     def terminate_job(self):
         self.k8s.terminate_job(self.app_id)
         self.update_application_state("terminated")
-        self.terminated = True
 
     def stop_application(self):
         self.rds.delete("job")
@@ -253,23 +259,25 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             return ()
         return self.rds.lrange("job:errors", 0, -1)
 
-    @set_timeout(1.0)
+    @set_timeout(0.5)
     def persist_state(self):
+
         obj_representation = self.__repr__()
         if self.obj_representation != obj_representation:
             self.persistence_obj.\
-                persist_state(self.app_id, obj_representation)
-
+                put(self.app_id, self)
             self.obj_representation = obj_representation
-
-        if not self.job_completed and not self.terminated:
+        try:
             self.persist_state()
+        except Exception as ex:
+            KUBEJOBS_LOG.log(ex)
+            
 
 
 class KubeJobsProvider(base.PluginInterface):
 
     def __init__(self):
-        self.id_generator = ID_Generator()
+        self.id_generator = ids.ID_Generator()
 
     def get_title(self):
         return 'Kubernetes Batch Jobs Plugin'
@@ -293,3 +301,11 @@ class KubeJobsProvider(base.PluginInterface):
                                            args=(data,))
         handling_thread.start()
         return app_id, executor
+
+
+def rebuild(app_id, starting_time, status, visualizer_url):
+    obj = KubeJobsExecutor(app_id=app_id,
+                           starting_time=starting_time,
+                           status=status,
+                           visualizer_url=visualizer_url)
+    return obj

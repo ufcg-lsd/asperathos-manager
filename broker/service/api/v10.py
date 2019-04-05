@@ -17,8 +17,10 @@ import os
 import shutil
 import socket
 import filecmp
+import etcd3
 
 from broker.plugins import base as plugin_base
+from broker.persistence.etcd_db import plugin as etcd
 from broker.service import api
 from broker.utils.logger import Log
 from broker.utils.framework import authorizer
@@ -27,12 +29,19 @@ from broker import exceptions as ex
 
 API_LOG = Log("APIv10", "logs/APIv10.log")
 
-submissions = {}
 clusters = {}
 activated_cluster = None
 
+
 CLUSTER_CONF_PATH = "./data/clusters"
 
+if api.persistence_name == 'etcd':
+    
+    persistence_obj = \
+        etcd.Etcd3Persistence(api.persistence_ip,
+                              api.persistence_port)
+
+submissions = persistence_obj.get_all()
 
 def run_submission(data):
     if ('plugin' not in data or 'plugin_info' not in data):
@@ -60,8 +69,8 @@ def run_submission(data):
         submission_data = data['plugin_info']
         submission_data['enable_auth'] = data['enable_auth']
         submission_id, executor = plugin.execute(submission_data)
-        submissions[submission_id] = executor
 
+        submissions[submission_id] = executor
         return {"job_id": submission_id}
 
 
@@ -74,8 +83,11 @@ def terminate_submission(submission_id, data):
 
 
 def submission_errors(submission_id):
-    if submission_id not in submissions:
+    
+    if submission_id \
+        not in submissions.keys():
         return None
+
     return submissions[submission_id].errors()
 
 
@@ -442,10 +454,10 @@ def delete_submission(submission_id, data):
         ex.UnauthorizedException -- Authetication problem
     """
     check_authorization(data)
-
     if submission_id in submissions.keys():
         if submissions[submission_id].get_application_state() in \
-                            ["completed", "terminated", "error"]:
+                             ["completed", "terminated", "error"]:
+            persistence_obj.delete(submission_id)
             del submissions[submission_id]
             API_LOG.log("%s submission deleted from this \
                         Asperathos instance!" % (submission_id))
@@ -468,9 +480,8 @@ def delete_all_submissions(data):
         ex.UnauthorizedException -- Authetication problem
     """
     check_authorization(data)
-
-    for id in submissions.keys():
-        delete_submission(id, data)
+    persistence_obj.delete_all()
+    submissions = {}
 
 
 def check_authorization(data):

@@ -23,7 +23,20 @@ def required(fun):
 
 @six.add_metaclass(abc.ABCMeta)
 class PersistenceInterface(object):
-
+    
     @required
-    def persist_state(self, app_id, state):
+    def put(self, app_id, state):
         pass
+    @required
+    def get(self, app_id):
+        pass
+    @required
+    def delete(self, app_id):
+        pass
+    @required
+    def delete_all(self, prefix='kj-'): 
+        pass
+    @required
+    def get_all(self, prefix="kj-"):
+        pass
+

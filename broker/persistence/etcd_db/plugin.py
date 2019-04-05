@@ -15,17 +15,38 @@
 
 from broker.persistence.persistence_interface import PersistenceInterface
 
+import dill
 import etcd3
 
 
 class Etcd3Persistence(PersistenceInterface):
 
     def __init__(self, ip, port):
-
+        
         self.etcd_connection = \
             etcd3.client(str(ip), str(port))
+            
+    def put(self, app_id, state):
+        with self.etcd_connection.lock('put', ttl=5):
+            ser = dill.dumps(state)
+            self.etcd_connection.put(str(app_id), ser)
+        
+    def get(self, app_id):
+        with self.etcd_connection.lock('get', ttl=5):
+            data = self.etcd_connection.get(str(app_id))[0]
+            return dill.loads(data)
 
-    def persist_state(self, app_id, state):
+    def delete(self, app_id):
+        with self.etcd_connection.lock('del', ttl=5):
+            self.etcd_connection.delete(str(app_id))
 
-        self.etcd_connection.\
-                put(str(app_id), state)
+    def delete_all(self, prefix='kj-'): 
+        with self.etcd_connection.lock('delall', ttl=5):
+            self.etcd_connection.delete_prefix(prefix)
+
+    def get_all(self, prefix="kj-"):
+        with self.etcd_connection.lock('getall', ttl=5):
+            return dict([(m.key, dill.loads(n)) for (n, m)
+                    in self.etcd_connection.get_prefix(prefix)])
+       
+
