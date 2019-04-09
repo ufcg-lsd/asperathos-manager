@@ -111,6 +111,8 @@ def list_submissions():
     submissions_status = {}
 
     for id in submissions.keys():
+
+        submissions[id].synchronize()
         this_status = {}
         submissions_status[id] = this_status
 
