@@ -53,16 +53,17 @@ def run_submission(data):
             API_LOG.log("Unauthorized request")
             raise ex.UnauthorizedException()
 
-    else:
-        if data['plugin'] not in api.plugins:
-            raise ex.BadRequestException()
-        plugin = plugin_base.PLUGINS.get_plugin(data['plugin'])
-        submission_data = data['plugin_info']
-        submission_data['enable_auth'] = data['enable_auth']
-        submission_id, executor = plugin.execute(submission_data)
-        submissions[submission_id] = executor
+    if data['plugin'] not in api.plugins:
+        API_LOG.log("Plugin is missing")
+        raise ex.BadRequestException("Plugin is missing")
 
-        return {"job_id": submission_id}
+    plugin = plugin_base.PLUGINS.get_plugin(data['plugin'])
+    submission_data = data['plugin_info']
+    submission_data['enable_auth'] = data['enable_auth']
+    submission_id, executor = plugin.execute(submission_data)
+    submissions[submission_id] = executor
+
+    return {"job_id": submission_id}
 
 
 def stop_submission(submission_id, data):
