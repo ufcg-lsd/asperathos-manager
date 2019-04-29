@@ -131,7 +131,7 @@ class BadRequestException(Exception):
     message = ("Malformed message body")
 
     def __init__(self, message="Malformed message body"):
-        message = message
+        self.message = message
 
 
 class MalformedRequestBody(SaharaException):

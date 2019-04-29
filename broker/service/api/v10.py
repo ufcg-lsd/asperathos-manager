@@ -54,8 +54,10 @@ def run_submission(data):
             raise ex.UnauthorizedException()
 
     if data['plugin'] not in api.plugins:
-        API_LOG.log("Plugin is missing")
-        raise ex.BadRequestException("Plugin is missing")
+        API_LOG.log("Plugin \"{}\" is missing.\
+        The plugins available are {}".format(data['plugin'], api.plugin))
+        raise ex.BadRequestException("Plugin \"{}\" is missing.\
+        The plugins available are {}".format(data['plugin'], api.plugin))
 
     plugin = plugin_base.PLUGINS.get_plugin(data['plugin'])
     submission_data = data['plugin_info']

@@ -12,23 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import requests
+import datetime
 import redis
+import requests
+import six
 import threading
 import time
-import datetime
 import uuid
 
+from broker import exceptions as ex
 from broker.plugins.base import GenericApplicationExecutor
 from broker.plugins import base
-from broker.utils.ids import ID_Generator
-from broker.utils.logger import Log
-from broker.utils.plugins import k8s
+from broker.service import api
+from broker.service.api import v10
 from broker.utils.framework import monitor
 from broker.utils.framework import controller
 from broker.utils.framework import visualizer
-from broker.service import api
-from broker.service.api import v10
+from broker.utils.ids import ID_Generator
+from broker.utils.logger import Log
+from broker.utils.plugins import k8s
 
 KUBEJOBS_LOG = Log("KubeJobsPlugin", "logs/kubejobs.log")
 application_time_log = Log("Application_time", "logs/application_time.log")
@@ -50,7 +52,7 @@ class KubeJobsExecutor(GenericApplicationExecutor):
 
     def start_application(self, data):
         try:
-
+            self.validate(data)
             # Download files that contains the items
             jobs = requests.get(data['redis_workload']).text.\
                 split('\n')[:-1]
@@ -189,9 +191,9 @@ class KubeJobsExecutor(GenericApplicationExecutor):
             if not self.get_application_state() == 'terminated':
                 self.k8s.terminate_job(self.app_id)
 
-        except Exception as ex:
+        except Exception as exception:
             self.update_application_state("error")
-            KUBEJOBS_LOG.log("ERROR: %s" % ex)
+            KUBEJOBS_LOG.log("ERROR: %s" % exception)
 
         KUBEJOBS_LOG.log("Application finished.")
 
@@ -232,6 +234,59 @@ class KubeJobsExecutor(GenericApplicationExecutor):
         except redis.exceptions.ConnectionError:
             return ()
         return self.rds.lrange("job:errors", 0, -1)
+
+    def validate(self, data):
+        data_model = {
+            "cmd": list,
+            "control_parameters": dict,
+            "control_plugin": six.string_types,
+            "env_vars": dict,
+            "img": six.string_types,
+            "init_size": int,
+            "monitor_info": dict,
+            "monitor_plugin": six.string_types,
+            "redis_workload": six.string_types,
+            "enable_visualizer": bool
+            # The parameters below are only needed if enable_visualizer is True
+            # "visualizer_plugin": six.string_types
+            # "visualizer_info":dict
+        }
+
+        for key in data_model:
+            if (key not in data):
+                raise ex.BadRequestException(
+                    "Variable \"{}\" is missing".format(key))
+            if (not isinstance(data[key], data_model[key])):
+                raise ex.BadRequestException(
+                    "\"{}\" has unexpected variable type: {}. Was expecting {}"
+                    .format(key, type(data[key]), data_model[key]))
+
+        if (data["enable_visualizer"]):
+            if ("visualizer_plugin" not in data):
+                raise ex.BadRequestException(
+                    "Variable \"visualizer_plugin\" is missing")
+
+            if (not isinstance(data["visualizer_plugin"], six.string_types)):
+                raise ex.BadRequestException(
+                    "\"visualizer_plugin\" has unexpected variable type: {}.\
+                     Was expecting {}"
+                    .format(type(data["visualizer_plugin"]),
+                            data_model["visualizer_plugin"]))
+
+            if ("visualizer_info" not in data):
+                raise ex.BadRequestException(
+                    "Variable \"visualizer_info\" is missing")
+
+            if (not isinstance(data["visualizer_info"], dict)):
+                raise ex.BadRequestException(
+                    "\"visualizer_info\" has unexpected variable type: {}.\
+                    Was expecting {}"
+                    .format(type(data["visualizer_info"]),
+                            data_model["visualizer_info"]))
+
+        if (not data["init_size"] > 0):
+            raise ex.BadRequestException(
+                "Variable \"init_size\" should be greater than 0")
 
 
 class KubeJobsProvider(base.PluginInterface):

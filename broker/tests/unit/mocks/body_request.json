@@ -1,3 +1,4 @@
+
 {
     "username": "user",
     "password": "psswrd",
@@ -19,9 +20,20 @@
         "USER_DOMAIN_NAME":"domain",
         "CONTAINER_NAME":"container"
     },
+    "control_plugin": "kubejobs",
+    "control_parameters": {
+        "check_interval": 2,
+        "trigger_down": 1,
+        "trigger_up": 1,
+        "min_rep": 2,
+        "max_rep": 10,
+        "actuation_size": 3,
+        "actuator": "nop",
+        "metric_source": "redis"
+    },
     "enable_visualizer":false,
-       "visualizer_plugin":"k8s-grafana",
-       "visualizer_info":{  
+    "visualizer_plugin":"k8s-grafana",
+    "visualizer_info":{  
           "datasource_type":"influxdb"
     },
     "config_id": 1,

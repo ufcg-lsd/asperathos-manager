@@ -13,14 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-import requests_mock
+import copy
 import json
+import requests_mock
 import threading
+import unittest
 
+from broker import exceptions as ex
 from broker.plugins.kubejobs.plugin import KubeJobsExecutor
 from broker.plugins.kubejobs.plugin import KubeJobsProvider
-
 from broker.tests.unit.mocks.k8s_mock import MockKube
 from broker.tests.unit.mocks.redis_mock import MockRedis
 
@@ -221,6 +222,31 @@ class TestKubeJobsPlugin(unittest.TestCase):
 
             with self.assertRaises(Exception):
                 self.job2.rds.delete("job")
+
+    def test_wrong_request_body(self):
+        """
+        Asserts that a BadRequestException will occur
+        if one of the parameters is missing
+        Args: None
+        Returns: None
+        """
+
+        request_error_counter = len(self.jsonRequest)
+        for key in self.jsonRequest:
+            parameters_test = copy.deepcopy(self.jsonRequest)
+            del parameters_test[key]
+            try:
+                self.job1.validate(parameters_test)
+            except ex.BadRequestException:
+                request_error_counter -= 1
+
+        # The number 6 is due to the 4 parameters that doesn't require any
+        # validation inside the plugin, these are:
+        # enable_auth, password, username, config_id
+        # And the other 2 that are optional, only needed if enable_visualizer
+        # is set to true, wich not happen in this case
+        # visualizer_plugin,visualizer_info
+        self.assertEqual(request_error_counter, 6)
 
 
 class TestKubeJobsProvider(unittest.TestCase):
