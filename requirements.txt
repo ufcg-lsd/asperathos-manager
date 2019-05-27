@@ -1,6 +1,8 @@
 cmd2==0.8.4
 cryptography==2.2.2
 ConfigParser
+dill
+etcd3
 Flask!=0.11,<1.0,>=0.10 # BSD
 Flask-Cors==3.0.7
 httplib2
@@ -9,6 +11,7 @@ keystoneauth1
 kubernetes
 PrettyTable
 paramiko
+peewee
 python-keystoneclient
 python-novaclient
 python-saharaclient
@@ -24,5 +27,4 @@ stevedore
 werkzeug
 virtualenv
 flake8
-urllib3==1.22
-
+urllib3<1.25,>=1.21.1

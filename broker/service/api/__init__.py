@@ -42,6 +42,20 @@ try:
         if plugin != '' and plugin not in config.sections():
             raise Exception("plugin '%s' section missing" % plugin)
 
+    # Setting a default persistence type
+    plugin_name = 'sqlite'
+
+    if 'persistence' in config.sections():
+        if(config.has_option('persistence', 'plugin_name')):
+            plugin_name = config.get('persistence', 'plugin_name')
+        if(config.has_option('persistence', 'persistence_ip')):
+            persistence_ip = config.get('persistence', 'persistence_ip')
+        if(config.has_option('persistence', 'persistence_port')):
+            persistence_port = config.get('persistence', 'persistence_port')
+        if(config.has_option('persistence', 'local_database_path')):
+            local_database_path = config.get('persistence',
+                                             'local_database_path')
+
     if 'kubejobs' in plugins:
 
         # Setting default values for the necessary variables

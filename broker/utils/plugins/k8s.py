@@ -213,6 +213,15 @@ def completed(app_id, namespace="default"):
     return job.status.completion_time is not None
 
 
+def get_job_status(app_id, namespace="default"):
+    kube.config.load_kube_config(api.k8s_conf_path)
+
+    job_api = kube.client.BatchV1Api()
+    job = job_api.read_namespaced_job_status(name=app_id, namespace=namespace)
+    status = job.status
+    return status
+
+
 def delete_redis_resources(app_id, namespace="default"):
     """Delete redis resources (Pod and Service) for a given ``app_id``"""
 
