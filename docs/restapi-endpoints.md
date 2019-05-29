@@ -209,7 +209,7 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
   Delete a cluster reference of the Asperathos section
 
 * **URL**: `/submissions/cluster/:cluster_name/delete`
-* **Method:** `POST`
+* **Method:** `DELETE`
 * **JSON Request:**
 	* ```javascript
 		{
@@ -230,7 +230,7 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
   Delete a certificate of a cluster reference in the Asperathos section
 
 * **URL**: `/submissions/cluster/:cluster_name/certificate/:certificate_name/delete`
-* **Method:** `POST`
+* **Method:** `DELETE`
 * **JSON Request:**
 	* ```javascript
 		{
@@ -248,10 +248,10 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 	    }
 		```
 
-## Active cluster
+## Activate cluster
   Start to use the informed cluster as active cluster in the Asperathos section.
 
-* **URL**: `/submissions/cluster/:cluster_name`
+* **URL**: `/submissions/cluster/:cluster_name/activate`
 * **Method:** `PUT`
 * **JSON Request:**
 	* ```javascript
@@ -292,7 +292,7 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 ## Get activated cluster
   Get the current activated cluster in a Asperathos instance.
 
-* **URL**: `/submissions/cluster/active`
+* **URL**: `/submissions/cluster/activate`
 * **Method:** `GET`
 * **Success Response:**
   * **Code:** `200` <br /> **Content:** 
