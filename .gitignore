@@ -17,3 +17,4 @@ manager.cfg.lsd
 /logs
 data/conf
 data/clusters
+local_database/db.db

@@ -42,9 +42,6 @@ try:
         if plugin != '' and plugin not in config.sections():
             raise Exception("plugin '%s' section missing" % plugin)
 
-    # Setting a default persistence type
-    plugin_name = 'sqlite'
-
     if 'persistence' in config.sections():
         if(config.has_option('persistence', 'plugin_name')):
             plugin_name = config.get('persistence', 'plugin_name')
@@ -55,6 +52,10 @@ try:
         if(config.has_option('persistence', 'local_database_path')):
             local_database_path = config.get('persistence',
                                              'local_database_path')
+    # Setting a default persistence type
+    else:
+        plugin_name = 'sqlite'
+        local_database_path = 'local_database/db.db'
 
     if 'kubejobs' in plugins:
 
