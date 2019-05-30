@@ -122,8 +122,8 @@ def add_certificate(cluster_name, data):
     return u.render(api.add_certificate(cluster_name, data))
 
 
-@rest.delete('/submissions/cluster/<cluster_name>/\
-             certificate/<certificate_name>/delete')
+@rest.delete('/submissions/cluster/<cluster_name>/' +
+             'certificate/<certificate_name>/delete', status_code=202)
 def delete_certificate(cluster_name, certificate_name, data):
     """ Delete a certificate to a cluster reference in the Asperathos section.
 
@@ -144,7 +144,7 @@ def delete_cluster(cluster_name, data):
     return u.render(api.delete_cluster(cluster_name, data))
 
 
-@rest.put('/submissions/cluster/<cluster_name>/activate')
+@rest.put('/submissions/cluster/<cluster_name>/activate', status_code=200)
 def activate_cluster(cluster_name, data):
     """ Start to use the informed cluster as active cluster
     in the Asperathos section.

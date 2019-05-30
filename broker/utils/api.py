@@ -180,7 +180,7 @@ def get_request_args():
 
 
 def abort_and_log(status_code, descr, exc=None):
-    LOG.log("Request aborted with status code code} and "
+    LOG.log("Request aborted with status code {code} and "
             "message '{message}'".format(code=status_code, message=descr))
 
     if exc is not None:

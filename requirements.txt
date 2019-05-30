@@ -27,4 +27,4 @@ stevedore
 werkzeug
 virtualenv
 flake8
-urllib3<1.25,>=1.21.1
+urllib3==1.22
