@@ -14,7 +14,6 @@ paramiko
 peewee
 python-keystoneclient
 python-novaclient
-python-saharaclient
 python-swiftclient
 python-monascaclient
 pytz

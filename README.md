@@ -56,8 +56,3 @@ Endpoints are avaliable on [restapi-endpoints.md](docs/restapi-endpoints.md) doc
 ## Avaliable plugins
 
 * [KubeJobs](docs/plugins/kubejobs.md)
-* [Spark Sahara](docs/plugins/spark_sahara.md)
-* [Spark Mesos](docs/plugins/spark_mesos.md)
-* [Spark Generic](docs/plugins/spark_generic.md)
-* [Openstack Generic](docs/plugins/openstack_generic.md)
-* [Chronos](docs/plugins/chronos.md)
