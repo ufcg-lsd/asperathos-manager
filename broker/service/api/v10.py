@@ -19,7 +19,7 @@ import os
 import shutil
 import socket
 
-from broker.plugins import base as plugin_base
+from broker.service import plugin_service
 from broker.persistence.etcd_db import plugin as etcd
 from broker.persistence.sqlite import plugin as sqlite
 from broker.service import api
@@ -50,6 +50,30 @@ elif api.plugin_name == 'sqlite':
 submissions = db_connector.get_all()
 
 
+def install_plugin(data):
+    plugin_repo = data.get('plugin_source')
+    source = data.get('install_source')
+    # name = data.get('plugin_name')
+    # module = data.get('plugin_module')
+    component = data.get('component')
+
+    if component == plugin_service.Components.MANAGER:
+        installed = plugin_service.install_plugin(source, plugin_repo)
+        if not installed:
+            return {"message": "Error installing plugin"}, 400
+        else:
+            return {"message": "Plugin installed successfully"}, 200
+    elif component == plugin_service.Components.VISUALIZER:
+        response = plugin_service.install_in_visualizer(source, plugin_repo)
+        return response.json(), response.status_code
+    elif component == plugin_service.Components.MONITOR:
+        response = plugin_service.install_in_monitor(source, plugin_repo)
+        return response.json(), response.status_code
+    elif component == plugin_service.Components.CONTROLLER:
+        response = plugin_service.install_in_controller(source, plugin_repo)
+        return response.json(), response.status_code
+
+
 def run_submission(data):
     if ('plugin' not in data or 'plugin_info' not in data):
         API_LOG.log("Missing plugin fields in request")
@@ -75,7 +99,7 @@ def run_submission(data):
         raise ex.BadRequestException("Plugin \"{}\" is missing.\
         The plugins available are {}".format(data['plugin'], api.plugin))
 
-    plugin = plugin_base.PLUGINS.get_plugin(data['plugin'])
+    plugin = plugin_service.get_plugin(data['plugin'])
     submission_data = data['plugin_info']
     submission_data['enable_auth'] = data['enable_auth']
     submission_id, executor = plugin.execute(submission_data)
@@ -167,11 +191,9 @@ def submission_log(submission_id):
 
 def submission_visualizer(submission_id):
     """ Gets the visualizer url of a specific job.
-
     Raises:
         ex.BadRequestException -- Trying to search info about a job that
         has never being submitted in this Asperathos instance.
-
     Returns:
         dict -- Returns a dict with 'visualizer_url' as key and the url
             that gives access to the visualizer platform as value.
@@ -206,12 +228,10 @@ def submission_visualizer(submission_id):
 def add_cluster(data):
     """ Add a new cluster that can be choose to be the active
     cluster in the Asperathos section in execution time.
-
     Raises:
         ex.BadRequestException -- Missing cluster and authentication
         fields in request
         ex.UnauthorizedException -- Wrong authentication variables informed
-
     Returns:
         dict -- Returns a dict with the cluster_name and
         the status of the addition
@@ -246,12 +266,10 @@ def add_cluster(data):
 def add_certificate(cluster_name, data):
     """ Add a certificate to a cluster that can be choose to be the active
     cluster in the Asperathos section in execution time.
-
     Raises:
         ex.BadRequestException -- Missing cluster and
         authentication fields in request
         ex.UnauthorizedException -- Wrong authentication variables informed
-
     Returns:
         dict -- Returns a dict with the cluster_name, certificate_name and
         the status of the addition
@@ -294,11 +312,9 @@ def add_certificate(cluster_name, data):
 def delete_certificate(cluster_name, certificate_name, data):
     """ Delete a certificate to a cluster that can be choose to be the active
     cluster in the Asperathos section in execution time.
-
     Raises:
         ex.BadRequestException -- Missing parameters in request
         ex.UnauthorizedException -- Authetication problem
-
     Returns:
         dict -- Returns a dict with the cluster_name, certificate_name and
         the status of the deletion
@@ -331,11 +347,9 @@ def delete_certificate(cluster_name, certificate_name, data):
 def delete_cluster(cluster_name, data):
     """ Delete a cluster that could be choose to be the active
     cluster in the Asperathos section in execution time.
-
     Raises:
         ex.BadRequestException -- Missing parameters in request
         ex.UnauthorizedException -- Authetication problem
-
     Returns:
         dict -- Returns a dict with the cluster_name and
         the status of the activation
@@ -373,11 +387,9 @@ def delete_cluster(cluster_name, data):
 
 def activate_cluster(cluster_name, data):
     """ Activate a cluster to be used in a Asperathos section
-
     Raises:
         ex.BadRequestException -- Missing parameters in request
         ex.UnauthorizedException -- Authetication problem
-
     Returns:
         dict -- Returns a dict with the cluster_name and
         the status of the activation
@@ -415,7 +427,6 @@ def activate_cluster(cluster_name, data):
 
 def get_clusters():
     """ Get the list of usable clusters in the Asperathos Manager instance
-
     Returns:
         dict -- Returns a dict with the cluster_name as key and
         the cluster config content as value.
@@ -425,7 +436,6 @@ def get_clusters():
 
 def get_activated_cluster():
     """ Get the current active cluster in Asperathos Manager instance
-
     Returns:
         dict -- Returns a dict with the cluster_name as key and
         the cluster config content as value.
@@ -437,7 +447,6 @@ def get_activated_cluster():
 def delete_submission(submission_id, data):
     """ Delete a done submission from the list of all
     submissions.
-
     Raises:
         ex.BadRequestException -- Missing parameters in request
         ex.BadRequestException -- Trying to delete a submission
@@ -465,7 +474,6 @@ def delete_submission(submission_id, data):
 def delete_all_submissions(data):
     """ Delete all done submissions from the list of all
     submissions.
-
     Raises:
         ex.BadRequestException -- Missing parameters in request
         ex.UnauthorizedException -- Authetication problem
@@ -479,7 +487,6 @@ def delete_all_submissions(data):
 
 def check_authorization(data):
     """ Checks the user's need to authenticate to Asperathos
-
     Raises:
         ex.BadRequestException -- Missing parameters in request
         ex.UnauthorizedException -- Unauthorized request

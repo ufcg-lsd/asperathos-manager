@@ -128,7 +128,6 @@ class UnauthorizedException(Exception):
 class BadRequestException(Exception):
 
     code = "BAD_REQUEST"
-    message = ("Malformed message body")
 
     def __init__(self, message="Malformed message body"):
         self.message = message

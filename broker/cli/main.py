@@ -15,12 +15,12 @@
 
 from flask import Flask
 from broker.api.v10 import rest
-from broker.plugins import base as plugin_base
 from broker.service import api
+from broker.utils.logger import configure_logging
 
 
 def main():
-    plugin_base.setup_plugins()
     app = Flask(__name__)
     app.register_blueprint(rest)
+    configure_logging()
     app.run(host='0.0.0.0', port=api.port, debug=True)

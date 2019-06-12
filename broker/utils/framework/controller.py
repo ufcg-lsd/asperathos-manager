@@ -16,6 +16,8 @@
 import json
 import requests
 
+from broker.service import api
+
 
 def start_controller(controller_url, app_id, workers, data):
     request_url = controller_url + '/scaling/' + app_id
@@ -56,3 +58,12 @@ def setup_environment(controller_url, instances, cap, data):
     data['actuator_plugin'] = data['scaling_parameters']['actuator']
 
     requests.post(setup_enviroment_url, data=json.dumps(data), headers=headers)
+
+
+def install_plugin(source, plugin):
+    payload = {
+        "install_source": source,
+        "plugin_source": plugin
+    }
+    return requests.post("{}/plugins".format(api.controller_url),
+                         json=payload)

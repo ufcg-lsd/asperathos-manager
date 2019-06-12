@@ -16,6 +16,7 @@
 import ast
 import json
 import requests
+from broker.service import api
 
 
 def start_visualization(visualizer_url, app_id, data):
@@ -51,3 +52,12 @@ def get_visualizer_url(visualizer_url, app_id):
     url = (ast.literal_eval(response_data.text))['url']
 
     return url
+
+
+def install_plugin(source, plugin):
+    payload = {
+        "install_source": source,
+        "plugin_source": plugin
+    }
+    return requests.post("{}/plugins".format(api.visualizer_url),
+                         json=payload)

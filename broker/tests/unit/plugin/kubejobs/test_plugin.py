@@ -20,8 +20,8 @@ import threading
 import unittest
 
 from broker import exceptions as ex
-from broker.plugins.kubejobs.plugin import KubeJobsExecutor
-from broker.plugins.kubejobs.plugin import KubeJobsProvider
+from kubejobs import KubeJobsExecutor
+from kubejobs import KubeJobsProvider
 from broker.tests.unit.mocks.k8s_mock import MockKube
 from broker.tests.unit.mocks.redis_mock import MockRedis
 from broker.tests.unit.mocks.persistence_mock import PersistenceMock

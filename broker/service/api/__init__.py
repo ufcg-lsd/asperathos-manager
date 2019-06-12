@@ -139,11 +139,9 @@ def get_node_cluster(k8s_conf_path):
     about the master node followed by the information of the slaves.
     Therefore, in order to avoid get the IP of the master node,
     this function always get the last node listed by the API.
-
     Raises:
         Exception -- It was not possible to connect with the
         Kubernetes cluster.
-
     Returns:
         string -- The node IP
     """

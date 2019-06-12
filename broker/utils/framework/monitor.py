@@ -16,6 +16,7 @@
 
 import json
 import requests
+from broker.service import api
 
 
 def _get_monitor_data(plugin, plugin_info, collect_period):
@@ -40,3 +41,12 @@ def stop_monitor(monitor_url, app_id):
     request_url = monitor_url + '/monitoring/' + app_id + "/stop"
     headers = {'Content-type': 'application/json'}
     requests.put(request_url, headers=headers)
+
+
+def install_plugin(source, plugin):
+    payload = {
+        "install_source": source,
+        "plugin_source": plugin
+    }
+    return requests.post("{}/plugins".format(api.monitor_url),
+                         json=payload)
