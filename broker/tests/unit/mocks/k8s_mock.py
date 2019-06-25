@@ -112,7 +112,7 @@ class MockKube():
         Returns:
             tuple: Representing the redis_ip and node_port
         """
-        return (None, None)
+        return ('0.0.0.0', '2364')
 
     def completed(self, app_id):
         """ Function that gets the status of completion of
@@ -151,7 +151,7 @@ class MockKube():
         """
         pass
 
-    def create_influxdb(app_id, database_name="asperathos",
+    def create_influxdb(self, app_id, database_name="asperathos",
                         img="influxdb", namespace="default",
                         visualizer_port=8086, timeout=60):
         """ Function that simulates a InfluxDB creation.
