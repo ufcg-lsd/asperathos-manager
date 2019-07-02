@@ -37,6 +37,12 @@ pipeline {
       labelledShell script: 'docker network rm network-manager-$BUILD_ID', label: "Remove test network"
       labelledShell script: 'docker volume rm d54-data-manager-$BUILD_ID', label: "Remove D5.4 volume"
       labelledShell script: 'docker volume rm organon-data-manager-$BUILD_ID', label: "Remove Organon volume"
+    }    
+     failure {
+      labelledShell script: 'docker exec docker-manager-$BUILD_ID docker logs testenv_manager_1', label: "Manager logs"
+      labelledShell script: 'docker exec docker-manager-$BUILD_ID docker logs testenv_monitor_1', label: "Monitor logs"
+      labelledShell script: 'docker exec docker-manager-$BUILD_ID docker logs testenv_visualizer_1', label: "Visualizer logs"
+      labelledShell script: 'docker exec docker-manager-$BUILD_ID docker logs testenv_controller_1', label: "Controller logs"
     }
   }
 }
