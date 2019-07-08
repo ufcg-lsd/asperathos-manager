@@ -52,7 +52,7 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 ## Delete submission
   Delete a done submission.
 
-* **URL**: `/submissions/:id/delete`
+* **URL**: `/submissions/:id`
 * **Method:** `DELETE`
 
 * **JSON Request:**
@@ -71,7 +71,7 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 ## Delete all submissions
   Delete all done submissions.
 
-* **URL**: `/submissions/delete`
+* **URL**: `/submissions`
 * **Method:** `DELETE`
 
 * **JSON Request:**
@@ -208,7 +208,7 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 ## Delete cluster
   Delete a cluster reference of the Asperathos section
 
-* **URL**: `/submissions/cluster/:cluster_name/delete`
+* **URL**: `/submissions/cluster/:cluster_name`
 * **Method:** `DELETE`
 * **JSON Request:**
 	* ```javascript
@@ -229,7 +229,7 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 ## Delete certificate
   Delete a certificate of a cluster reference in the Asperathos section
 
-* **URL**: `/submissions/cluster/:cluster_name/certificate/:certificate_name/delete`
+* **URL**: `/submissions/cluster/:cluster_name/certificate/:certificate_name`
 * **Method:** `DELETE`
 * **JSON Request:**
 	* ```javascript

@@ -130,7 +130,7 @@ def add_certificate(cluster_name, data):
 
 
 @rest.delete('/submissions/cluster/<cluster_name>/' +
-             'certificate/<certificate_name>/delete', status_code=202)
+             'certificate/<certificate_name>', status_code=202)
 def delete_certificate(cluster_name, certificate_name, data):
     """ Delete a certificate to a cluster reference in the Asperathos section.
 
@@ -141,7 +141,7 @@ def delete_certificate(cluster_name, certificate_name, data):
                                            certificate_name, data))
 
 
-@rest.delete('/submissions/cluster/<cluster_name>/delete')
+@rest.delete('/submissions/cluster/<cluster_name>')
 def delete_cluster(cluster_name, data):
     """ Delete a cluster reference in the Asperathos section.
 
@@ -184,7 +184,7 @@ def get_activated_cluster():
     return u.render(api.get_activated_cluster())
 
 
-@rest.delete('/submissions/<submission_id>/delete')
+@rest.delete('/submissions/<submission_id>')
 def delete_submission(submission_id, data):
     """ Delete a done submission for the list of
     all submissions
@@ -195,7 +195,7 @@ def delete_submission(submission_id, data):
     return u.render(api.delete_submission(submission_id, data))
 
 
-@rest.delete('/submissions/delete')
+@rest.delete('/submissions')
 def delete_all_submissions(data):
     """ Delete all done submissions from the list of all
     submissions.
