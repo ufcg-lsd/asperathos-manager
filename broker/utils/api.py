@@ -81,8 +81,6 @@ class Rest(flask.Blueprint):
                     return access_denied(e)
                 except ex.BadRequestException as e:
                     return bad_request(e)
-                except ex.SaharaException as e:
-                    return bad_request(e)
                 except Exception as e:
                     return internal_error(500, 'Internal Server Error', e)
 

@@ -16,11 +16,11 @@
 from flask import Flask
 from broker.api.v10 import rest
 from broker.service import api
-from broker.utils.logger import configure_logging
+from broker.utils import logger
 
 
 def main():
     app = Flask(__name__)
     app.register_blueprint(rest)
-    configure_logging()
+    logger.configure_logging()
     app.run(host='0.0.0.0', port=api.port, debug=True)

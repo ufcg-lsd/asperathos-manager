@@ -18,8 +18,8 @@ import six
 import uuid
 
 
-class SaharaException(Exception):
-    """Base Exception for the Sahara Plugin
+class GenericException(Exception):
+    """Base Exception for the Generic Plugin
 
     To correctly use this class, inherit from it and define
     a 'message' and 'code' properties.
@@ -43,11 +43,11 @@ class SaharaException(Exception):
             self.message = (('%(message)s\nError ID: %(id)s')
                             % {'message': self.message, 'id': self.uuid})
 
-        super(SaharaException, self).__init__(
+        super(GenericException, self).__init__(
             '%s: %s' % (self.code, self.message))
 
 
-class NotFoundException(SaharaException):
+class NotFoundException(GenericException):
     code = "NOT_FOUND"
     message_template = "Object '%s' is not found"
 
@@ -62,7 +62,7 @@ class NotFoundException(SaharaException):
         super(NotFoundException, self).__init__(formatted_message)
 
 
-class RemoteCommandException(SaharaException):
+class RemoteCommandException(GenericException):
     code = "REMOTE_COMMAND_FAILED"
     message_template = "Error during command execution: \"%s\""
 
@@ -93,7 +93,7 @@ class RemoteCommandException(SaharaException):
         super(RemoteCommandException, self).__init__(formatted_message)
 
 
-class TimeoutException(SaharaException):
+class TimeoutException(GenericException):
     code = "TIMEOUT"
     message_template = ("'%(operation)s' timed out after %(timeout)i "
                         "second(s)")
@@ -115,7 +115,7 @@ class TimeoutException(SaharaException):
         super(TimeoutException, self).__init__(formatted_message)
 
 
-class Forbidden(SaharaException):
+class Forbidden(GenericException):
     code = "FORBIDDEN"
     message = ("You are not authorized to complete this action")
 
@@ -133,7 +133,7 @@ class BadRequestException(Exception):
         self.message = message
 
 
-class MalformedRequestBody(SaharaException):
+class MalformedRequestBody(GenericException):
     code = "MALFORMED_REQUEST_BODY"
     message_template = ("Malformed message body: %(reason)s")
 
@@ -142,7 +142,7 @@ class MalformedRequestBody(SaharaException):
         super(MalformedRequestBody, self).__init__(formatted_message)
 
 
-class MaxRetriesExceeded(SaharaException):
+class MaxRetriesExceeded(GenericException):
     code = "MAX_RETRIES_EXCEEDED"
     message_template = ("Operation %(operation)s wasn't executed correctly "
                         "after %(attempts)d attempts")
@@ -154,11 +154,11 @@ class MaxRetriesExceeded(SaharaException):
         super(MaxRetriesExceeded, self).__init__(formatted_message)
 
 
-class ClusterNotCreatedException(SaharaException):
+class ClusterNotCreatedException(GenericException):
     code = "CLUSTER_NOT_CREATED"
     message = "Cluster could not be created"
 
 
-class ConfigurationError(SaharaException):
+class ConfigurationError(GenericException):
     code = "CONFIGURATION_ERROR"
     message = "The configuration has failed"

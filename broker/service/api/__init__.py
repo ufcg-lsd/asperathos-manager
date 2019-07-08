@@ -72,62 +72,6 @@ try:
             if(config.has_option('kubejobs', 'redis_ip')):
                 redis_ip = config.get('kubejobs', 'redis_ip')
 
-    if 'openstack_generic' in plugins:
-        public_key = config.get('openstack_generic', 'public_key')
-        key_path = config.get('openstack_generic', 'key_path')
-        user_domain_name = config.get('openstack_generic', 'user_domain_name')
-        project_id = config.get('openstack_generic', 'project_id')
-        auth_ip = config.get('openstack_generic', 'auth_ip')
-        user = config.get('openstack_generic', 'user')
-        password = config.get('openstack_generic', 'password')
-        domain = config.get('openstack_generic', 'user_domain_name')
-        log_path = config.get('openstack_generic', 'log_path')
-
-    if 'spark_sahara' in plugins:
-        log_path = config.get('openstack_generic', 'log_path')
-        public_key = config.get('spark_sahara', 'public_key')
-        key_path = config.get('spark_sahara', 'key_path')
-        container = config.get('spark_sahara', 'swift_container')
-        user_domain_name = config.get('spark_sahara', 'user_domain_name')
-        project_id = config.get('spark_sahara', 'project_id')
-        auth_ip = config.get('spark_sahara', 'auth_ip')
-        user = config.get('spark_sahara', 'user')
-        password = config.get('spark_sahara', 'password')
-        domain = config.get('spark_sahara', 'user_domain_name')
-        number_of_attempts = config.getint('spark_sahara',
-                                           'number_of_attempts')
-        swift_logdir = config.get('spark_sahara', 'swift_logdir')
-        remote_hdfs = config.get('spark_sahara', 'remote_hdfs')
-        number_of_attempts = config.getint('spark_sahara',
-                                           'number_of_attempts')
-        dummy_opportunistic = config.getboolean('spark_sahara',
-                                                'dummy_opportunistic')
-        hosts = config.get('spark_sahara', 'hosts').split(',')
-
-    if 'spark_generic' in plugins:
-        key_path = config.get('spark_generic', 'key_path')
-        number_of_attempts = config.getint('spark_generic',
-                                           'number_of_attempts')
-        remote_hdfs = config.get('spark_generic', 'remote_hdfs')
-        masters_ips = config.get('spark_generic', 'masters_ips').split(' ')
-
-    if 'spark_mesos' in plugins:
-        mesos_url = config.get('spark_mesos', 'mesos_url')
-        mesos_port = config.get('spark_mesos', 'mesos_port')
-        cluster_username = config.get('spark_mesos', 'cluster_username')
-        cluster_password = config.get('spark_mesos', 'cluster_password')
-        cluster_key_path = config.get('spark_mesos', 'key_path')
-        one_url = config.get('spark_mesos', 'one_url')
-        one_password = config.get('spark_mesos', 'one_password')
-        one_username = config.get('spark_mesos', 'one_username')
-        spark_path = config.get('spark_mesos', 'spark_path')
-
-    if 'chronos' in plugins:
-        chronos_url = config.get('chronos', 'url')
-        chronos_username = config.get('chronos', 'username')
-        chronos_password = config.get('chronos', 'password')
-        supervisor_url = config.get('chronos', 'supervisor_url')
-
 except Exception as e:
     API_LOG.log("Error: %s" % e.message)
     quit()
