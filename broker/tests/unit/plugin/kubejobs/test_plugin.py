@@ -213,6 +213,7 @@ class TestKubeJobsPlugin(unittest.TestCase):
                   text="{'url': 'http://visualizer-url'}")
 
             data = {'visualizer_info': {}}
+            self.job1.enable_visualizer = True
             self.job1.start_visualization(data)
             self.assertEqual(self.job1.get_visualizer_url(),
                              "http://visualizer-url")

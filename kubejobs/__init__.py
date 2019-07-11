@@ -45,7 +45,8 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                  job_completed=False,
                  terminated=False,
                  visualizer_url="URL not generated!",
-                 enable_visualizer=False):
+                 enable_visualizer=False,
+                 data=None):
 
         self.waiting_time_before_delete_job_resources = \
                 WAITING_TIME_DEFAULT
@@ -60,14 +61,26 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         self.k8s = k8s
         self.db_connector = self.get_db_connector()
         self.enable_visualizer = enable_visualizer
+        self.data = data
 
     def __repr__(self):
-        return json.dumps({
+
+        representation = {
             "app_id": self.app_id,
             "starting_time": str(self.get_application_start_time()),
             "status": self.status,
             "visualizer_url": self.visualizer_url
-        })
+        }
+        if self.job_completed or self.terminated:
+            representation.update(self.get_report())
+        return json.dumps(representation)
+
+    def get_report(self):
+        return monitor.get_job_report(api.monitor_url,
+                                      self.app_id,
+                                      self.data['monitor_plugin'],
+                                      self.data['monitor_info']
+                                      )
 
     def __reduce__(self):
         return (rebuild, (self.app_id,
@@ -85,6 +98,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
 
     def start_application(self, data):
         try:
+            self.data = data
             self.persist_state()
             self.validate(data)
             self.activate_related_cluster(data)
@@ -152,13 +166,14 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         return redis_ip, redis_port
 
     def setup_visualizer(self, data):
-        KUBEJOBS_LOG.log("Creating Visualization platform...")
+
         self.enable_visualizer = data['enable_visualizer']
-
+        datasource_type = None
+        database_data = {}
         if self.enable_visualizer:
+            KUBEJOBS_LOG.log("Creating Visualization platform...")
             datasource_type = data['visualizer_info']['datasource_type']
-
-        database_data = self.setup_datasource(datasource_type)
+            database_data = self.setup_datasource(datasource_type)
 
         return database_data, datasource_type
 
@@ -214,15 +229,16 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         return schedule_strategy, heuristic_options
 
     def start_visualization(self, data):
-        visualizer.start_visualization(
-            api.visualizer_url, self.app_id, data['visualizer_info'])
+        if self.enable_visualizer:
+            visualizer.start_visualization(
+                api.visualizer_url, self.app_id, data['visualizer_info'])
 
-        self.visualizer_url = visualizer.get_visualizer_url(
-                    api.visualizer_url, self.app_id)
+            self.visualizer_url = visualizer.get_visualizer_url(
+                        api.visualizer_url, self.app_id)
 
-        KUBEJOBS_LOG.log(
-            "Dashboard of the job created on: %s" %
-            (self.visualizer_url))
+            KUBEJOBS_LOG.log(
+                "Dashboard of the job created on: %s" %
+                (self.visualizer_url))
 
     def push_jobs_to_redis(self, data):
 
