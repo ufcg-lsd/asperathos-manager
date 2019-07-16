@@ -46,7 +46,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                  terminated=False,
                  visualizer_url="URL not generated!",
                  enable_visualizer=False,
-                 data=None):
+                 data=None, enable_detailed_report=False):
 
         self.waiting_time_before_delete_job_resources = \
                 WAITING_TIME_DEFAULT
@@ -61,6 +61,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         self.k8s = k8s
         self.db_connector = self.get_db_connector()
         self.enable_visualizer = enable_visualizer
+        self.enable_detailed_report = enable_detailed_report
         self.data = data
 
     def __repr__(self):
@@ -76,17 +77,27 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         return json.dumps(representation)
 
     def get_report(self):
-        return monitor.get_job_report(api.monitor_url,
-                                      self.app_id,
-                                      self.data['monitor_plugin'],
-                                      self.data['monitor_info']
-                                      )
+        report =  monitor.get_job_report(api.monitor_url,
+                                         self.app_id,
+                                         self.data['monitor_plugin'],
+                                         self.data['monitor_info']
+                                         )
+        if "error_code" in report:
+            report = {'message': 'Monitoring does not exists '
+                'yet or has been deleted!'}
+        return report
 
     def get_detailed_report(self):
-        return monitor.get_detailed_report(api.monitor_url,
+        report = monitor.get_detailed_report(api.monitor_url,
                                            self.app_id,
                                            self.data['monitor_plugin'],
                                            self.data['monitor_info'])
+        if not self.enable_detailed_report:
+            report = {'message': 'The detailed report is disabled to this job!'}
+        if "error_code" in report:
+            report = {'message': 'Monitoring does not exists '
+                'yet or has been deleted!'}
+        return report
 
     def __reduce__(self):
         return (rebuild, (self.app_id,
@@ -106,13 +117,13 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
     def start_application(self, data):
         try:
             self.data = data
-            print self.data
             self.persist_state()
             self.validate(data)
             self.activate_related_cluster(data)
             self.update_env_vars(data)
             redis_ip, redis_port = self.setup_redis()
-            database_data, datasource_type = self.setup_visualizer(data)
+            database_data, datasource_type = \
+                self.setup_metric_persistence(data)
             self.update_visualizer_info(data, database_data, redis_ip)
             self.start_visualization(data)
             self.persist_state()
@@ -132,6 +143,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             self.terminated = True
             self.update_application_state("error")
             KUBEJOBS_LOG.log("ERROR: %s" % ex)
+            raise
 
         KUBEJOBS_LOG.log("Application finished.")
 
@@ -173,13 +185,13 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
 
         return redis_ip, redis_port
 
-    def setup_visualizer(self, data):
+    def setup_metric_persistence(self, data):
 
-        self.enable_visualizer = data['enable_visualizer']
+        self.enable_detailed_report = data['enable_detailed_report']
         datasource_type = None
         database_data = {}
-        if self.enable_visualizer:
-            KUBEJOBS_LOG.log("Creating Visualization platform...")
+        if self.enable_detailed_report:
+            KUBEJOBS_LOG.log("Creating metrics persistence platform...")
             datasource_type = data['visualizer_info']['datasource_type']
             database_data = self.setup_datasource(datasource_type)
 
@@ -218,6 +230,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                     'redis_ip': redis_ip,
                     'redis_port': redis_port,
                     'enable_visualizer': self.enable_visualizer,
+                    'enable_detailed_report': self.enable_detailed_report,
                     'scaling_strategy': schedule_strategy,
                     'heuristic_options': heuristic_options
                     })
@@ -237,6 +250,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         return schedule_strategy, heuristic_options
 
     def start_visualization(self, data):
+        self.enable_visualizer = data['enable_visualizer']
         if self.enable_visualizer:
             visualizer.start_visualization(
                 api.visualizer_url, self.app_id, data['visualizer_info'])
@@ -385,7 +399,8 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             "monitor_info": dict,
             "monitor_plugin": six.string_types,
             "redis_workload": six.string_types,
-            "enable_visualizer": bool
+            "enable_visualizer": bool,
+            "enable_detailed_report": bool
             # The parameters below are only needed if enable_visualizer is True
             # "visualizer_plugin": six.string_types
             # "visualizer_info":dict
@@ -401,6 +416,10 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                     .format(key, type(data[key]), data_model[key]))
 
         if (data["enable_visualizer"]):
+            if not data["enable_detailed_report"]:
+                raise ex.BadRequestException(
+                    "To create visualization, the detailed report flag"
+                    "need be enabled")
             if ("visualizer_plugin" not in data):
                 raise ex.BadRequestException(
                     "Variable \"visualizer_plugin\" is missing")
