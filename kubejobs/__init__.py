@@ -77,26 +77,27 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         return json.dumps(representation)
 
     def get_report(self):
-        report =  monitor.get_job_report(api.monitor_url,
-                                         self.app_id,
-                                         self.data['monitor_plugin'],
-                                         self.data['monitor_info']
-                                         )
+        report = monitor.get_job_report(api.monitor_url,
+                                        self.app_id,
+                                        self.data['monitor_plugin'],
+                                        self.data['monitor_info']
+                                        )
         if "error_code" in report:
             report = {'message': 'Monitoring does not exists '
-                'yet or has been deleted!'}
+                      'yet or has been deleted!'}
         return report
 
     def get_detailed_report(self):
         report = monitor.get_detailed_report(api.monitor_url,
-                                           self.app_id,
-                                           self.data['monitor_plugin'],
-                                           self.data['monitor_info'])
+                                             self.app_id,
+                                             self.data['monitor_plugin'],
+                                             self.data['monitor_info'])
         if not self.enable_detailed_report:
-            report = {'message': 'The detailed report is disabled to this job!'}
+            report = {'message': 'The detailed report is '
+                      'disabled to this job!'}
         if "error_code" in report:
             report = {'message': 'Monitoring does not exists '
-                'yet or has been deleted!'}
+                      'yet or has been deleted!'}
         return report
 
     def __reduce__(self):

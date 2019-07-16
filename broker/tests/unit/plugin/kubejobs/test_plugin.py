@@ -115,18 +115,18 @@ class TestKubeJobsPlugin(unittest.TestCase):
         """
         self.assertEqual(self.job1.setup_redis(), ("0.0.0.0", "2364"))
 
-    def test_setup_visualizer(self):
+    def test_setup_metric_persistence(self):
         """
         Verify that visualizer components has been created and connected
         """
         datasource_type = "influxdb"
-        data = {'enable_visualizer': True,
+        data = {'enable_detailed_report': True,
                 'visualizer_info':
                     {'datasource_type': datasource_type}
                 }
 
         database_data = {'port': 1234, 'name': 'asperathos'}
-        self.assertEqual(self.job2.setup_visualizer(data),
+        self.assertEqual(self.job2.setup_metric_persistence(data),
                          (database_data, datasource_type))
 
     def test_setup_datasource(self):
@@ -188,7 +188,8 @@ class TestKubeJobsPlugin(unittest.TestCase):
                               'redis_port': redis_port,
                               'enable_visualizer': False,
                               'scaling_strategy': '',
-                              'heuristic_options': ''
+                              'heuristic_options': '',
+                              'enable_detailed_report': False
                               }
 
         now = datetime.datetime.now()
@@ -212,8 +213,10 @@ class TestKubeJobsPlugin(unittest.TestCase):
             m.get(api.visualizer_url + '/visualizing/' + self.job_id1,
                   text="{'url': 'http://visualizer-url'}")
 
-            data = {'visualizer_info': {}}
-            self.job1.enable_visualizer = True
+            data = {'visualizer_info': {},
+                    'enable_visualizer': True,
+                    'enable_detailed_report': True
+                    }
             self.job1.start_visualization(data)
             self.assertEqual(self.job1.get_visualizer_url(),
                              "http://visualizer-url")
