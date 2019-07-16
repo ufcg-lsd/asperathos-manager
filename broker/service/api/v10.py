@@ -158,9 +158,16 @@ def submission_status(submission_id):
         raise ex.BadRequestException()
 
     # TODO: Update status of application with more informations
-
     return json.loads(submissions.
                       get(submission_id).__repr__())
+
+
+def submission_report(submission_id):
+    if submission_id not in submissions:
+        API_LOG.log("Wrong request")
+        raise ex.BadRequestException()
+
+    return submissions.get(submission_id).get_detailed_report()
 
 
 def submission_log(submission_id):

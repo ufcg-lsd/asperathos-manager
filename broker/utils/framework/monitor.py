@@ -37,6 +37,14 @@ def get_job_report(monitor_url, app_id, plugin, plugin_info):
     return json.loads(resp.text)
 
 
+def get_detailed_report(monitor_url, app_id, plugin, plugin_info):
+    request_url = monitor_url + '/monitoring/' + app_id + '/report/detailed'
+    headers = {'Content-type': 'application/json'}
+    data = _get_monitor_data(plugin, plugin_info)
+    resp = requests.get(request_url, data=data, headers=headers)
+    return json.loads(resp.text)
+
+
 def start_monitor(monitor_url, app_id, plugin, plugin_info, collect_period):
     request_url = monitor_url + '/monitoring/' + app_id
     headers = {'Content-type': 'application/json'}

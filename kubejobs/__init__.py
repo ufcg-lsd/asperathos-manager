@@ -82,11 +82,18 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                                       self.data['monitor_info']
                                       )
 
+    def get_detailed_report(self):
+        return monitor.get_detailed_report(api.monitor_url,
+                                           self.app_id,
+                                           self.data['monitor_plugin'],
+                                           self.data['monitor_info'])
+
     def __reduce__(self):
         return (rebuild, (self.app_id,
                           self.starting_time,
                           self.status,
-                          self.visualizer_url))
+                          self.visualizer_url,
+                          self.data))
 
     def get_db_connector(self):
         if (api.plugin_name == "etcd"):
@@ -99,6 +106,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
     def start_application(self, data):
         try:
             self.data = data
+            print self.data
             self.persist_state()
             self.validate(data)
             self.activate_related_cluster(data)
@@ -449,11 +457,14 @@ class KubeJobsProvider(base.PluginInterface):
         return app_id, executor
 
 
-def rebuild(app_id, starting_time, status, visualizer_url):
+def rebuild(app_id, starting_time,
+            status, visualizer_url,
+            data=None):
     obj = KubeJobsExecutor(app_id=app_id,
                            starting_time=starting_time,
                            status=status,
-                           visualizer_url=visualizer_url)
+                           visualizer_url=visualizer_url,
+                           data=data)
     return obj
 
 
