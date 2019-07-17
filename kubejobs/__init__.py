@@ -46,7 +46,8 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                  terminated=False,
                  visualizer_url="URL not generated!",
                  enable_visualizer=False,
-                 data=None, enable_detailed_report=False):
+                 data=None, enable_detailed_report=False,
+                 execution_time="Job is not finished!"):
 
         self.waiting_time_before_delete_job_resources = \
                 WAITING_TIME_DEFAULT
@@ -62,6 +63,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         self.db_connector = self.get_db_connector()
         self.enable_visualizer = enable_visualizer
         self.enable_detailed_report = enable_detailed_report
+        self.execution_time = execution_time
         self.data = data
 
     def __repr__(self):
@@ -70,7 +72,8 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             "app_id": self.app_id,
             "starting_time": str(self.get_application_start_time()),
             "status": self.status,
-            "visualizer_url": self.visualizer_url
+            "visualizer_url": self.visualizer_url,
+            "execution_time": self.execution_time
         }
         if self.job_completed or self.terminated:
             representation.update(self.get_report())
@@ -105,7 +108,8 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                           self.starting_time,
                           self.status,
                           self.visualizer_url,
-                          self.data))
+                          self.data,
+                          self.execution_time))
 
     def get_db_connector(self):
         if (api.plugin_name == "etcd"):
@@ -115,11 +119,16 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         elif (api.plugin_name == "sqlite"):
             return sqlite.SqlitePersistence()
 
+    def enable_detailed_report_if_visualizer_is_enabled(self):
+        if self.data['enable_visualizer']:
+            self.enable_detailed_report = True
+
     def start_application(self, data):
         try:
             self.data = data
             self.persist_state()
             self.validate(data)
+            self.enable_detailed_report_if_visualizer_is_enabled()
             self.activate_related_cluster(data)
             self.update_env_vars(data)
             redis_ip, redis_port = self.setup_redis()
@@ -188,7 +197,8 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
 
     def setup_metric_persistence(self, data):
 
-        self.enable_detailed_report = data['enable_detailed_report']
+        if 'enable_detailed_report' in data:
+            self.enable_detailed_report = data['enable_detailed_report']
         datasource_type = None
         database_data = {}
         if self.enable_detailed_report:
@@ -299,6 +309,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         while not self.job_completed and not self.terminated:
             self.synchronize()
             time.sleep(check_interval)
+        self.execution_time = self.get_application_execution_time()
 
     def delete_job_resources(self, data):
         time.sleep(self.waiting_time_before_delete_job_resources)
@@ -401,7 +412,6 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             "monitor_plugin": six.string_types,
             "redis_workload": six.string_types,
             "enable_visualizer": bool,
-            "enable_detailed_report": bool
             # The parameters below are only needed if enable_visualizer is True
             # "visualizer_plugin": six.string_types
             # "visualizer_info":dict
@@ -417,10 +427,6 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                     .format(key, type(data[key]), data_model[key]))
 
         if (data["enable_visualizer"]):
-            if not data["enable_detailed_report"]:
-                raise ex.BadRequestException(
-                    "To create visualization, the detailed report flag"
-                    "need be enabled")
             if ("visualizer_plugin" not in data):
                 raise ex.BadRequestException(
                     "Variable \"visualizer_plugin\" is missing")
@@ -479,12 +485,14 @@ class KubeJobsProvider(base.PluginInterface):
 
 def rebuild(app_id, starting_time,
             status, visualizer_url,
-            data=None):
+            data,
+            execution_time="Job is not finished!"):
     obj = KubeJobsExecutor(app_id=app_id,
                            starting_time=starting_time,
                            status=status,
                            visualizer_url=visualizer_url,
-                           data=data)
+                           data=data,
+                           execution_time=execution_time)
     return obj
 
 

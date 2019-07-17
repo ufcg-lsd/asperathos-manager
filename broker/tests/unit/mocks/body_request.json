@@ -32,7 +32,6 @@
         "metric_source": "redis"
     },
     "enable_visualizer":false,
-    "enable_detailed_report": false,
     "visualizer_plugin":"k8s-grafana",
     "visualizer_info":{  
           "datasource_type":"influxdb"

@@ -65,7 +65,8 @@ class TestKubeJobsPlugin(unittest.TestCase):
         """
         job1_repr = {'app_id': self.job_id1,
                      'status': 'created',
-                     'visualizer_url': "URL not generated!"
+                     'visualizer_url': "URL not generated!",
+                     'execution_time': "Job is not finished!"
                      }
 
         job1 = json.loads(self.job1.__repr__())
