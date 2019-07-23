@@ -29,16 +29,16 @@ class SqlitePersistence(PersistenceInterface):
             pass
 
     def put(self, app_id, state):
-
         new_state = JobState(app_id=app_id,
                              obj_serialized=dill.dumps(state))
         try:
             new_state.save()
 
         except peewee.IntegrityError:
-            JobState.update({JobState.
+            query = JobState.update({JobState.
                              obj_serialized: dill.dumps(state)}).\
                             where(JobState.app_id == app_id)
+            query.execute()
 
     def get(self, app_id):
 
@@ -60,7 +60,6 @@ class SqlitePersistence(PersistenceInterface):
 
         all_jobs = dict([(obj.app_id, dill.loads(obj.obj_serialized))
                          for obj in all_states])
-
         for key in all_jobs:
             current_job = all_jobs.get(key)
             current_job.synchronize()

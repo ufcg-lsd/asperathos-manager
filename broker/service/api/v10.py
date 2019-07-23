@@ -18,6 +18,10 @@ import json
 import os
 import shutil
 import socket
+import datetime
+import time
+import threading
+import kubernetes
 
 from broker.service import plugin_service
 from broker.persistence.etcd_db import plugin as etcd
@@ -35,6 +39,7 @@ activated_cluster = None
 
 
 CLUSTER_CONF_PATH = "./data/clusters"
+CHECK_INTERVAL = 1
 
 if api.plugin_name == 'etcd':
 
@@ -517,3 +522,25 @@ def check_authorization(data):
         if not authorization['success']:
             API_LOG.log("Unauthorized request")
             raise ex.UnauthorizedException()
+
+def trigger_watch_thread():
+    while True:
+        for job_id in submissions:
+            job = submissions[job_id]
+            if job.thread_flag:
+                now = datetime.datetime.now()
+                if (now - job.finish_time).\
+                    total_seconds() > job.job_resources_lifetime:
+                    try:
+                        job.delete_job_resources()
+                    except Exception:
+                        pass
+                    job.thread_flag = False
+                    job.persist_state()
+
+        time.sleep(CHECK_INTERVAL)
+
+handling_thread = threading.Thread(target=trigger_watch_thread)
+handling_thread.daemon = True
+handling_thread.start()
+

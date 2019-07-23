@@ -280,7 +280,7 @@ class TestKubeJobsPlugin(unittest.TestCase):
             m.put(api.controller_url + '/scaling/'
                   + self.job_id1 + '/stop', text="")
 
-            self.job1.delete_job_resources(data)
+            self.job1.delete_job_resources()
 
     def test_get_update_application_state(self):
         """
@@ -352,7 +352,7 @@ class TestKubeJobsPlugin(unittest.TestCase):
         self.assertEqual(self.job1.get_application_state(), 'created')
         self.job1.trigger_job(data)
         self.assertEqual(self.job1.get_application_state(), 'ongoing')
-        self.job1.change_state_to_completed()
+        self.job1.wait_job_finish()
         self.assertEqual(self.job1.get_application_state(), 'completed')
 
 

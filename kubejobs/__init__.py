@@ -35,7 +35,6 @@ from broker import exceptions as ex
 KUBEJOBS_LOG = logger.Log("KubeJobsPlugin", "logs/kubejobs.log")
 application_time_log = \
     logger.Log("Application_time", "logs/application_time.log")
-WAITING_TIME_DEFAULT = 600
 
 
 class KubeJobsExecutor(base.GenericApplicationExecutor):
@@ -47,10 +46,11 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                  visualizer_url="URL not generated!",
                  enable_visualizer=False,
                  data=None, enable_detailed_report=False,
-                 execution_time="Job is not finished!"):
+                 execution_time="Job is not finished!",
+                 job_resources_lifetime=0, report={},
+                 thread_flag=False, finish_time=None):
 
-        self.waiting_time_before_delete_job_resources = \
-                WAITING_TIME_DEFAULT
+        self.job_resources_lifetime = job_resources_lifetime
         self.id = ids.ID_Generator().get_ID()
         self.app_id = app_id
         self.starting_time = starting_time
@@ -64,7 +64,10 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         self.enable_visualizer = enable_visualizer
         self.enable_detailed_report = enable_detailed_report
         self.execution_time = execution_time
+        self.report = report
         self.data = data
+        self.finish_time = finish_time
+        self.thread_flag = thread_flag
 
     def __repr__(self):
 
@@ -75,8 +78,8 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             "visualizer_url": self.visualizer_url,
             "execution_time": self.execution_time
         }
-        if self.job_completed or self.terminated:
-            representation.update(self.get_report())
+        
+        representation.update(self.report)
         return json.dumps(representation)
 
     def get_report(self):
@@ -88,7 +91,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         if "error_code" in report:
             report = {'message': 'Monitoring does not exists '
                       'yet or has been deleted!'}
-        return report
+        self.report = report
 
     def get_detailed_report(self):
         report = monitor.get_detailed_report(api.monitor_url,
@@ -109,7 +112,11 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                           self.status,
                           self.visualizer_url,
                           self.data,
-                          self.execution_time))
+                          self.execution_time,
+                          self.report,
+                          self.thread_flag,
+                          self.finish_time,
+                          self.job_resources_lifetime))
 
     def get_db_connector(self):
         if (api.plugin_name == "etcd"):
@@ -146,8 +153,6 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             self.add_redis_info_to_data(data, redis_ip, redis_port)
             self.start_controlling(data)
             self.wait_job_finish(check_interval=1)
-            self.change_state_to_completed()
-            self.delete_job_resources(data)
 
         except Exception as ex:
             self.terminated = True
@@ -160,10 +165,10 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
     def add_redis_info_to_data(self, data, redis_ip, redis_port):
         data.update({'redis_ip': redis_ip, 'redis_port': redis_port})
 
-    def change_state_to_completed(self):
-        if(self.get_application_state() == "ongoing"):
-            self.update_application_state("completed")
-        KUBEJOBS_LOG.log("Job finished")
+    # def change_state_to_completed(self):
+    #     if(self.get_application_state() == "ongoing"):
+    #         self.update_application_state("completed")
+    #         KUBEJOBS_LOG.log("Job finished")
 
     def get_workload(self, data):
         # Download files that contains the items
@@ -306,17 +311,26 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                                         self.app_id, data)
 
     def wait_job_finish(self, check_interval=1):
-        while not self.job_completed and not self.terminated:
-            self.synchronize()
-            time.sleep(check_interval)
-        self.execution_time = self.get_application_execution_time()
+        if not self.job_completed and not self.terminated:
+            while not self.job_completed and not self.terminated:
+                self.synchronize()
+                time.sleep(check_interval)
+            if self.execution_time == 'Job is not finished!':
+                self.execution_time = self.get_application_execution_time()
+            KUBEJOBS_LOG.log("Job finished - Status: "
+                            + self.get_application_state())
+            self.get_report()
+            self.finish_time = datetime.datetime.now()
+            self.job_resources_lifetime = self.data["job_resources_lifetime"]
+            self.thread_flag = True
+            self.persist_state()
+            
 
-    def delete_job_resources(self, data):
-        time.sleep(self.waiting_time_before_delete_job_resources)
+    def delete_job_resources(self):
         if self.enable_visualizer:
             visualizer.stop_visualization(api.visualizer_url,
                                           self.app_id,
-                                          data['visualizer_info'])
+                                          self.data['visualizer_info'])
 
         monitor.stop_monitor(api.monitor_url, self.app_id)
         controller.stop_controller(api.controller_url,
@@ -328,6 +342,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         # delete redis resources
         if not self.get_application_state() == 'terminated':
             self.k8s.terminate_job(self.app_id)
+        self.thread_flag = False
 
     def get_application_state(self):
         return self.status
@@ -385,7 +400,8 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         try:
             current_status = self.k8s.get_job_status(self.app_id)
             if current_status.active is not None:
-                self.update_application_state("ongoing")
+                if self.get_application_state() != 'ongoing':
+                    self.update_application_state("ongoing")
             else:
                 condition = current_status.conditions.pop().type
                 if condition == 'Complete':
@@ -486,13 +502,19 @@ class KubeJobsProvider(base.PluginInterface):
 def rebuild(app_id, starting_time,
             status, visualizer_url,
             data,
-            execution_time="Job is not finished!"):
+            execution_time, report,
+            thread_flag, finish_time,
+            job_resources_lifetime):
     obj = KubeJobsExecutor(app_id=app_id,
                            starting_time=starting_time,
                            status=status,
                            visualizer_url=visualizer_url,
                            data=data,
-                           execution_time=execution_time)
+                           execution_time=execution_time,
+                           report=report,
+                           thread_flag=thread_flag,
+                           finish_time=finish_time,
+                           job_resources_lifetime=job_resources_lifetime)
     return obj
 
 
