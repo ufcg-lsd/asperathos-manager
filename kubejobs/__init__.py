@@ -78,7 +78,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             "visualizer_url": self.visualizer_url,
             "execution_time": self.execution_time
         }
-        
+
         representation.update(self.report)
         return json.dumps(representation)
 
@@ -86,8 +86,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         report = monitor.get_job_report(api.monitor_url,
                                         self.app_id,
                                         self.data['monitor_plugin'],
-                                        self.data['monitor_info']
-                                        )
+                                        self.data['monitor_info'])
         if "error_code" in report:
             report = {'message': 'Monitoring does not exists '
                       'yet or has been deleted!'}
@@ -318,13 +317,12 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             if self.execution_time == 'Job is not finished!':
                 self.execution_time = self.get_application_execution_time()
             KUBEJOBS_LOG.log("Job finished - Status: "
-                            + self.get_application_state())
+                             + self.get_application_state())
             self.get_report()
             self.finish_time = datetime.datetime.now()
             self.job_resources_lifetime = self.data["job_resources_lifetime"]
             self.thread_flag = True
             self.persist_state()
-            
 
     def delete_job_resources(self):
         if self.enable_visualizer:
@@ -371,9 +369,13 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
     def terminate_job(self):
         self.k8s.terminate_job(self.app_id)
         self.update_application_state("terminated")
+        self.finish_time = datetime.datetime.now()
+        self.thread_flag = True
 
     def stop_application(self):
         self.rds.delete("job")
+        self.finish_time = datetime.datetime.now()
+        self.thread_flag = True
 
     def errors(self):
         try:

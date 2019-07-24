@@ -35,6 +35,12 @@ class Etcd3Persistence(PersistenceInterface):
             data = self.etcd_connection.get(str(app_id))[0]
             return dill.loads(data)
 
+    def get_finished_jobs(self):
+        all_jobs = self.get_all()
+        finished_jobs = filter(lambda a: a.thread_flag is True,
+                               all_jobs.values())
+        return finished_jobs
+
     def delete(self, app_id):
         with self.etcd_connection.lock('del', ttl=5):
             self.etcd_connection.delete(str(app_id))

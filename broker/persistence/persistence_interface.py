@@ -33,6 +33,10 @@ class PersistenceInterface(object):
         pass
 
     @required
+    def get_finished_jobs(self):
+        pass
+
+    @required
     def delete(self, app_id):
         pass
 

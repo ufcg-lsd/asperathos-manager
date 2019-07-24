@@ -36,14 +36,18 @@ class SqlitePersistence(PersistenceInterface):
 
         except peewee.IntegrityError:
             query = JobState.update({JobState.
-                             obj_serialized: dill.dumps(state)}).\
-                            where(JobState.app_id == app_id)
+                                     obj_serialized: dill.dumps(state)}).\
+                                     where(JobState.app_id == app_id)
             query.execute()
 
     def get(self, app_id):
 
         state = JobState.get(JobState.app_id == app_id)
         return dill.loads(state.obj_serialized)
+
+    def get_finished_jobs(self):
+        finished_jobs = JobState.select().where(JobState.thread_flag is True)
+        return map(dill.loads, finished_jobs)
 
     def delete(self, app_id):
 

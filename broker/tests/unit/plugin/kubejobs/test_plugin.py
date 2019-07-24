@@ -271,7 +271,6 @@ class TestKubeJobsPlugin(unittest.TestCase):
         Verify that stop monitoring, scaling and visualizing
         request has done without errors,
         """
-        data = {'visualizer_info': {}}
         with requests_mock.Mocker() as m:
             m.put(api.visualizer_url + '/visualizing/'
                   + self.job_id1 + '/stop', text="")
@@ -348,7 +347,8 @@ class TestKubeJobsPlugin(unittest.TestCase):
                 'env_vars': {'VAR1': 123},
                 'config_id': 12321
                 }
-
+        self.job1.data = {'monitor_info': {},
+                          'monitor_plugin': 'kubejobs'}
         self.assertEqual(self.job1.get_application_state(), 'created')
         self.job1.trigger_job(data)
         self.assertEqual(self.job1.get_application_state(), 'ongoing')

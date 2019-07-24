@@ -24,6 +24,9 @@ class PersistenceMock(PersistenceInterface):
     def get(self, app_id):
         pass
 
+    def get_finished_jobs(self):
+        pass
+
     def delete(self, app_id):
         pass
 
