@@ -37,7 +37,7 @@ try:
     port = config.getint('general', 'port')
     plugins = config.get('general', 'plugins').split(',')
     cleaner_interval = config.getint('general', 'cleaner_interval',
-                                     fallback=30)
+                                     fallback=1)
 
     """ Validate if really exists a section to listed plugins """
     for plugin in plugins:

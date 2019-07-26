@@ -9,16 +9,14 @@ from broker.service import api
 def trigger_watch_thread():
     while True:
         submissions = v10api.db_connector.get_finished_jobs()
+        time_sleep = api.cleaner_interval
         for job_id in submissions:
             job = submissions[job_id]
-            if job.thread_flag:
-                now = datetime.datetime.now()
-                seconds_past = (now - job.finish_time).total_seconds()
-                if seconds_past > job.job_resources_lifetime:
-                    job.delete_job_resources()
-                    job.thread_flag = False
-                    job.persist_state()
-
+            now = datetime.datetime.now()
+            seconds_past = (now - job.finish_time).total_seconds()
+            print seconds_past
+            if seconds_past > job.job_resources_lifetime:
+                job.delete_job_resources()
         time.sleep(api.cleaner_interval)
 
 

@@ -46,8 +46,8 @@ class SqlitePersistence(PersistenceInterface):
         return dill.loads(state.obj_serialized)
 
     def get_finished_jobs(self):
-        finished_jobs = JobState.select().where(JobState.thread_flag is True)
-        return map(dill.loads, finished_jobs)
+     
+        return dict(filter(lambda obj: obj[1].thread_flag, self.get_all().items()))
 
     def delete(self, app_id):
 

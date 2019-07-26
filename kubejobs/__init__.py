@@ -323,6 +323,8 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             self.job_resources_lifetime = self.data["job_resources_lifetime"]
             self.thread_flag = True
             self.persist_state()
+            api.v10.queue.insert_element(self.app_id, self.job_resources_lifetime)
+
 
     def delete_job_resources(self):
         if self.enable_visualizer:
@@ -341,6 +343,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         if not self.get_application_state() == 'terminated':
             self.k8s.terminate_job(self.app_id)
         self.thread_flag = False
+        self.persist_state()
 
     def get_application_state(self):
         return self.status

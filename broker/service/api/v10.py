@@ -18,6 +18,8 @@ import json
 import os
 import shutil
 import socket
+import datetime
+import threading
 
 from broker.service import plugin_service
 from broker.persistence.etcd_db import plugin as etcd
@@ -27,6 +29,7 @@ from broker.utils.logger import Log
 from broker.utils.framework import authorizer
 from broker.utils.framework import visualizer
 from broker import exceptions as ex
+from broker.solution.queue_svc import QueueService
 
 API_LOG = Log("APIv10", "logs/APIv10.log")
 
@@ -36,19 +39,37 @@ activated_cluster = None
 
 CLUSTER_CONF_PATH = "./data/clusters"
 
-if api.plugin_name == 'etcd':
-
-    db_connector = \
-        etcd.Etcd3Persistence(api.persistence_ip,
+def setup_database():
+    if api.plugin_name == 'etcd':
+        return etcd.Etcd3Persistence(api.persistence_ip,
                               api.persistence_port)
-
-elif api.plugin_name == 'sqlite':
-
-    db_connector = \
-        sqlite.SqlitePersistence()
-
+    elif api.plugin_name == 'sqlite':
+        return sqlite.SqlitePersistence()
+    else:
+        raise Exception('Unknown database name')
+db_connector = setup_database()
 submissions = db_connector.get_all()
+queue = QueueService(submissions)
 
+def restore_database_backup():
+
+    finished_jobs = db_connector.get_finished_jobs()
+
+    for job_id in finished_jobs:
+        job  = finished_jobs[job_id]
+        now = datetime.datetime.now()
+        elapsed_time = (now - job.finish_time)
+        if elapsed_time.total_seconds() >= job.job_resources_lifetime:
+            try:
+                job.delete_job_resources()
+            except:
+                job.thread_flag = False
+                job.persist_state()
+        else:
+            new_time = int(job.job_resources_lifetime - elapsed_time.total_seconds())
+            queue.insert_element(job.app_id, new_time)
+        
+restore_database_backup()
 
 def install_plugin(data):
     plugin_repo = data.get('plugin_source')
@@ -517,3 +538,4 @@ def check_authorization(data):
         if not authorization['success']:
             API_LOG.log("Unauthorized request")
             raise ex.UnauthorizedException()
+
