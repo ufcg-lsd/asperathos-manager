@@ -25,21 +25,21 @@ def required(fun):
 class PersistenceInterface(object):
 
     @required
-    def put(self, app_id, state):
+    def put(self, key, value):
         pass
 
     @required
-    def get(self, app_id):
+    def get(self, key):
         pass
 
     @required
-    def delete(self, app_id):
+    def delete(self, key):
         pass
 
     @required
-    def delete_all(self, prefix='kj-'):
+    def delete_all(self):
         pass
 
     @required
-    def get_all(self, prefix="kj-"):
+    def get_all(self):
         pass

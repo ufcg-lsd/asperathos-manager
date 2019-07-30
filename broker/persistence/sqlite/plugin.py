@@ -14,13 +14,13 @@
 # limitations under the License.
 
 from broker.persistence.persistence_interface import PersistenceInterface
-from broker.persistence.sqlite.model import JobState
+from broker.persistence.sqlite.model import JobState, Plugin
 
 import dill
 import peewee
 
 
-class SqlitePersistence(PersistenceInterface):
+class SqliteJobPersistence(PersistenceInterface):
 
     def __init__(self):
         try:
@@ -67,3 +67,44 @@ class SqlitePersistence(PersistenceInterface):
             self.put(current_job.app_id, current_job)
 
         return all_jobs
+
+
+class SqlitePluginPersistence(PersistenceInterface):
+
+    def __init__(self):
+        try:
+            Plugin.create_table()
+        except peewee.OperationalError:
+            pass
+
+    def put(self, plugin_name, source, plugin_source,
+            component, plugin_module=None):
+
+        plugin = Plugin(name=plugin_name, source=source,
+                        plugin_source=plugin_source,
+                        component=component, module=plugin_module)
+        plugin.save()
+
+        return plugin
+
+    def get(self, name):
+        plugin = Plugin.get(Plugin.name == name)
+        return plugin
+
+    def get_by_name_and_component(self, name, component):
+        for p in self.get_all():
+            if p.name == name and \
+               p.component == component:
+                return p
+        return None
+
+    def delete(self, name):
+        plugin = Plugin.get(Plugin.name == name)
+        plugin.delete_instance()
+
+    def delete_all(self):
+        Plugin.delete()
+
+    def get_all(self):
+        all_plugins = Plugin.select()
+        return all_plugins

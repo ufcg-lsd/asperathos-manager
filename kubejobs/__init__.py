@@ -77,11 +77,11 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
 
     def get_db_connector(self):
         if (api.plugin_name == "etcd"):
-            return etcd.Etcd3Persistence(api.persistence_ip,
-                                         api.persistence_port)
+            return etcd.Etcd3JobPersistence(api.persistence_ip,
+                                            api.persistence_port)
 
         elif (api.plugin_name == "sqlite"):
-            return sqlite.SqlitePersistence()
+            return sqlite.SqliteJobPersistence()
 
     def start_application(self, data):
         try:

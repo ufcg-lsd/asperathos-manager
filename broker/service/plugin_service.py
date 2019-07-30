@@ -48,3 +48,24 @@ def install_in_monitor(source, plugin):
 
 def install_in_controller(source, plugin):
     return controller.install_plugin(source, plugin)
+
+
+def check_submission(db, submission_data):
+    ''' Checks and replaces a submission data
+    for plugin name:module binding.
+    Example: If a plugin name is 'Kubejobs' but its
+    import module is 'kubejobs', this replaces plugin name
+    to plugin module.
+    '''
+
+    plugin_fields = [("plugin", "manager"),
+                     ("control_plugin", "controller"),
+                     ("monitor_plugin", "monitor"),
+                     ("visualizer_plugin", "visualizer")]
+
+    for p, c in plugin_fields:
+        plugin = submission_data.get('plugin_info').get(p)
+        if not plugin:
+            plugin = submission_data.get(p)
+        plugin = db.get_by_name_and_component(plugin, c)
+        submission_data[p] = plugin.module

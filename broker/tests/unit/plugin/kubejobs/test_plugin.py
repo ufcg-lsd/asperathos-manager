@@ -78,7 +78,7 @@ class TestKubeJobsPlugin(unittest.TestCase):
         connector (Sqlite)
         """
         self.assertTrue(isinstance(self.job1.get_db_connector(),
-                                   sqlite.SqlitePersistence))
+                                   sqlite.SqliteJobPersistence))
 
     def test_get_workload(self):
         """

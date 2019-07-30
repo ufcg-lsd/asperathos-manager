@@ -20,6 +20,7 @@ import shutil
 import socket
 
 from broker.service import plugin_service
+from broker.persistence import check_basic_plugins
 from broker.persistence.etcd_db import plugin as etcd
 from broker.persistence.sqlite import plugin as sqlite
 from broker.service import api
@@ -39,23 +40,35 @@ CLUSTER_CONF_PATH = "./data/clusters"
 if api.plugin_name == 'etcd':
 
     db_connector = \
-        etcd.Etcd3Persistence(api.persistence_ip,
-                              api.persistence_port)
+        etcd.Etcd3JobPersistence(api.persistence_ip,
+                                 api.persistence_port)
+    plugin_connector = \
+        etcd.Etcd3PluginPersistence(api.persistence_ip,
+                                    api.persistence_port)
 
 elif api.plugin_name == 'sqlite':
 
     db_connector = \
-        sqlite.SqlitePersistence()
+        sqlite.SqliteJobPersistence()
+
+    plugin_connector = \
+        sqlite.SqlitePluginPersistence()
 
 submissions = db_connector.get_all()
+check_basic_plugins(plugin_connector)
 
 
 def install_plugin(data):
     plugin_repo = data.get('plugin_source')
     source = data.get('install_source')
-    # name = data.get('plugin_name')
-    # module = data.get('plugin_module')
+    name = data.get('plugin_name')
+    module = data.get('plugin_module')
     component = data.get('component')
+
+    plugin_connector.put(plugin_name=name, source=source,
+                         plugin_source=source,
+                         component=component,
+                         plugin_module=module)
 
     if component == plugin_service.Components.MANAGER:
         installed = plugin_service.install_plugin(source, plugin_repo)
@@ -74,7 +87,13 @@ def install_plugin(data):
         return response.json(), response.status_code
 
 
+def get_all_plugins():
+    return [p.to_dict()
+            for p in plugin_connector.get_all()]
+
+
 def run_submission(data):
+    plugin_service.check_submission(plugin_connector, data)
     if ('plugin' not in data or 'plugin_info' not in data):
         API_LOG.log("Missing plugin fields in request")
         raise ex.BadRequestException("Missing plugin fields in request")

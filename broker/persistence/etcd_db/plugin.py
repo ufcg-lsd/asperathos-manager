@@ -12,14 +12,15 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from broker.persistence.persistence_interface import PersistenceInterface
-
 import dill
 import etcd3
+import json
+
+from broker.persistence.persistence_interface import PersistenceInterface
+from broker.persistence.etcd_db.model import Plugin
 
 
-class Etcd3Persistence(PersistenceInterface):
+class Etcd3JobPersistence(PersistenceInterface):
 
     def __init__(self, ip, port):
 
@@ -55,3 +56,72 @@ class Etcd3Persistence(PersistenceInterface):
                 self.put(current_job.app_id, current_job)
 
         return all_jobs
+
+
+class Etcd3PluginPersistence(PersistenceInterface):
+
+    PLUGIN_PREFIX = 'asperathos_plugin:'
+
+    def __init__(self, ip, port):
+
+        self.etcd_connection = etcd3.client(str(ip), str(port))
+
+    def put(self, plugin_name, source, plugin_source,
+            component, plugin_module=None):
+
+        plugin_data = {
+            "name": plugin_name,
+            "source": source,
+            "plugin_source": plugin_name,
+            "component": component,
+            "module": plugin_module or plugin_name
+        }
+
+        plugin = Plugin(name=plugin_name, source=source,
+                        plugin_source=plugin_source,
+                        component=component,
+                        module=plugin_module)
+
+        with self.etcd_connection.lock('put', ttl=5):
+            self.etcd_connection.\
+                put('{}{}-{}'.format(Etcd3PluginPersistence.PLUGIN_PREFIX,
+                                     plugin_name, component),
+                    json.dumps(plugin_data))
+
+        return plugin
+
+    def get(self, plugin_name):
+        with self.etcd_connection.lock('get', ttl=5):
+            data = self.etcd_connection.\
+                get('{}{}'.format(Etcd3PluginPersistence.PLUGIN_PREFIX,
+                                  plugin_name))[0]
+            return data
+
+    def get_by_name_and_component(self, plugin_name, component):
+        with self.etcd_connection.lock('get', ttl=5):
+            data = self.etcd_connection.\
+                get('{}{}-{}'.format(Etcd3PluginPersistence.PLUGIN_PREFIX,
+                                     plugin_name, component))[0]
+            return data
+
+    def delete(self, plugin_name):
+        with self.etcd_connection.lock('del', ttl=5):
+            self.etcd_connection.\
+                delete('{}{}'.format(Etcd3PluginPersistence.PLUGIN_PREFIX,
+                                     plugin_name))
+
+    def delete_all(self):
+        with self.etcd_connection.lock('delall', ttl=5):
+            self.etcd_connection.\
+                delete_prefix(Etcd3PluginPersistence.PLUGIN_PREFIX)
+
+    def get_all(self, prefix=PLUGIN_PREFIX):
+
+        with self.etcd_connection.lock('getall', ttl=5):
+            raw_plugins = self.etcd_connection.get_prefix(prefix)
+
+        plugins = []
+        for p, metadata in raw_plugins:
+            p = json.loads(p)
+            plugins.append(Plugin(**p))
+        return plugins

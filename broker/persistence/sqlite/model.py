@@ -15,15 +15,46 @@
 
 # -*- coding: utf_8 -*-
 import peewee
-from broker.service import api
+import configparser
 
-db = peewee.SqliteDatabase(api.local_database_path)
+config = configparser.RawConfigParser()
+config.read('./broker.cfg')
+
+if(config.has_option('persistence', 'local_database_path')):
+    local_database_path = config.get('persistence',
+                                     'local_database_path')
+else:
+    local_database_path = 'local_database/db.db'
 
 
-class JobState(peewee.Model):
+db = peewee.SqliteDatabase(local_database_path)
+
+
+class BaseModel(peewee.Model):
+
+    class Meta:
+        database = db
+
+
+class JobState(BaseModel):
 
     app_id = peewee.CharField(unique=True)
     obj_serialized = peewee.BlobField()
 
-    class Meta:
-        database = db
+
+class Plugin(BaseModel):
+
+    name = peewee.CharField()
+    source = peewee.CharField()
+    plugin_source = peewee.CharField()
+    module = peewee.CharField()
+    component = peewee.CharField()
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "source": self.source,
+            "plugin_source": self.plugin_source,
+            "module": self.module,
+            "component": self.component
+        }

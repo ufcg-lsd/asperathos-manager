@@ -29,6 +29,11 @@ def install_plugin(data):
     return jsonify(response), status
 
 
+@rest.get('/plugins')
+def get_plugins():
+    return jsonify(api.get_all_plugins()), 200
+
+
 @rest.post('/submissions')
 def run_submission(data):
     """ Run a new submission and returns a submission id.
