@@ -29,7 +29,7 @@ from broker.utils.logger import Log
 from broker.utils.framework import authorizer
 from broker.utils.framework import visualizer
 from broker import exceptions as ex
-from broker.solution.queue_svc import QueueService
+from broker.service.job_cleaner_daemon import JobCleanerDaemon
 
 API_LOG = Log("APIv10", "logs/APIv10.log")
 
@@ -47,14 +47,19 @@ def setup_database():
         return sqlite.SqlitePersistence()
     else:
         raise Exception('Unknown database name')
+
 db_connector = setup_database()
-submissions = db_connector.get_all()
-queue = QueueService(submissions)
 
-def restore_database_backup():
 
+def restore_submissions_backup(db_connector):
+    return db_connector.get_all()
+
+submissions = restore_submissions_backup(db_connector)
+job_cleaner_svc = JobCleanerDaemon(submissions)
+
+
+def delete_jobs_resources_or_activate_cleaner_svc():
     finished_jobs = db_connector.get_finished_jobs()
-
     for job_id in finished_jobs:
         job  = finished_jobs[job_id]
         now = datetime.datetime.now()
@@ -63,13 +68,35 @@ def restore_database_backup():
             try:
                 job.delete_job_resources()
             except:
-                job.thread_flag = False
+                job.del_resources_authorization = False
                 job.persist_state()
         else:
             new_time = int(job.job_resources_lifetime - elapsed_time.total_seconds())
-            queue.insert_element(job.app_id, new_time)
-        
-restore_database_backup()
+            job_cleaner_svc.insert_element(job.app_id, new_time)
+
+delete_jobs_resources_or_activate_cleaner_svc()
+
+
+def create_thread(job):
+    thread = threading.Thread(target=job.wait_job_finish)
+    thread.daemon = True
+    thread.start()
+
+
+def recover_ongoing_jobs_thread(jobs):
+    for key in jobs:
+        job = jobs[key]
+        if not job.job_completed and not job.terminated:
+            create_thread(job)
+
+recover_ongoing_jobs_thread(submissions)
+
+def synchronize_jobs_with_the_cluster(jobs):
+    for key in jobs:
+        jobs[key].synchronize()
+    
+synchronize_jobs_with_the_cluster(submissions)
+
 
 def install_plugin(data):
     plugin_repo = data.get('plugin_source')
@@ -483,7 +510,9 @@ def delete_submission(submission_id, data):
     """
     check_authorization(data)
     if submission_id in submissions:
-        if submissions[submission_id].get_application_state() != "ongoing":
+        submission = submissions[submission_id]
+        if submission.get_application_state() != "ongoing" and \
+            not submission.del_resources_authorization:
 
             db_connector.delete(submission_id)
             del submissions[submission_id]

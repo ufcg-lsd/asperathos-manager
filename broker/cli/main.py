@@ -17,13 +17,10 @@ from flask import Flask
 from broker.api.v10 import rest
 from broker.service import api
 from broker.utils import logger
-from broker.cli import job_cleaner_daemon as job_cleaner
-
 
 def main():
     app = Flask(__name__)
     app.register_blueprint(rest)
     logger.configure_logging()
-    app.run(host='0.0.0.0', port=api.port,
-            debug=True, use_reloader=False)
+    app.run(host='0.0.0.0', port=api.port)
     

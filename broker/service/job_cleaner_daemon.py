@@ -1,10 +1,10 @@
 import time
 import threading
 
-from broker.solution.linkedlist import LinkedList
+from broker.utils.linkedlist import LinkedList
 
 
-class QueueService():
+class JobCleanerDaemon():
 
     def __init__(self, submissions):
         self.submissions = submissions
@@ -15,8 +15,8 @@ class QueueService():
     def lapse_time(self):
         while not self.queue.is_empty():
             time.sleep(1)
-            print self.queue.to_list()
             self.queue.head.value.remaining_time -= 1
+            print self.queue.to_list()
             if self.queue.head.value.remaining_time <= 0:
                 jobs_finished_ids = self.queue.pop().value.get_app_id()
                 for job_id in jobs_finished_ids:
@@ -25,7 +25,7 @@ class QueueService():
         self.active = False
     
     def insert_element(self, app_id, time):
-        element = QueueElement(app_id, time)
+        element = JobRepr(app_id, time)
         self.queue.insert(element)
         if not self.active:
             self.active = True
@@ -37,7 +37,7 @@ class QueueService():
         self.thread.start()
 
 
-class QueueElement():
+class JobRepr():
 
     def __init__(self, app_id, remaining_time):
 

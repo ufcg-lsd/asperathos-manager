@@ -16,9 +16,7 @@
 import unittest
 
 from broker.solution.linkedlist import LinkedList
-from broker.solution.queue_svc import QueueElement
-
-
+from broker.service.job_cleaner_daemon import JobCleanerDaemon
 class TestIDGenerator(unittest.TestCase):
 
     """
@@ -37,19 +35,19 @@ class TestIDGenerator(unittest.TestCase):
 
     def test_add_element(self):
 
-        element1 = QueueElement('kj-123123', 10)
-        element2 = QueueElement('kj-321321', 10)
-        element3 = QueueElement('kj-321111', 15)
-        element4 = QueueElement('kj-321222', 5)
+        element1 = JobCleanerDaemon('kj-123123', 10)
+        element2 = JobCleanerDaemon('kj-321321', 10)
+        element3 = JobCleanerDaemon('kj-321111', 15)
+        element4 = JobCleanerDaemon('kj-321222', 5)
 
         self.obj1.insert(element1)
         self.obj1.insert(element2)
         self.obj1.insert(element3)
         self.obj1.insert(element4)
-        self.obj1.insert(QueueElement('kj-321111', 15))
-        self.obj1.insert(QueueElement('kj-321111', 0))        
-        self.obj1.insert(QueueElement('kj-321111', 100))
-        # self.obj1.insert(QueueElement('kj-321111', ))  
+        self.obj1.insert(JobCleanerDaemon('kj-321111', 15))
+        self.obj1.insert(JobCleanerDaemon('kj-321111', 0))        
+        self.obj1.insert(JobCleanerDaemon('kj-321111', 100))
+        # self.obj1.insert(JobCleanerDaemon('kj-321111', ))  
 
         print self.obj1.to_list()
         self.assertEqual(1,2)
