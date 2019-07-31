@@ -27,7 +27,7 @@ class MockRedis():
     """
 
     def __init__(self):
-        self.map = {}
+        self.map = {"job": []}
 
     """ Function the simulates the push of a job in the
         redis queue

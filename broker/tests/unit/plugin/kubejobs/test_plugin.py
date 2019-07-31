@@ -51,6 +51,7 @@ class TestKubeJobsPlugin(unittest.TestCase):
         self.job2.k8s = MockKube(self.job_id2)
         self.job2.waiting_time_before_delete_job_resources = 0
         self.job2.db_connector = PersistenceMock()
+        self.job2.rds = MockRedis()
 
         with open('broker/tests/unit/mocks/body_request.json') as f:
             self.jsonRequest = json.load(f)
@@ -298,8 +299,12 @@ class TestKubeJobsPlugin(unittest.TestCase):
         self.assertFalse(self.job2.get_application_state() == "created")
         self.assertEqual(self.job2.get_application_state(), "ongoing")
 
-        self.job2.update_application_state("terminated")
+        self.job2.update_application_state("stopped")
         self.assertFalse(self.job2.get_application_state() == "ongoing")
+        self.assertEqual(self.job2.get_application_state(), "stopped")
+
+        self.job2.update_application_state("terminated")
+        self.assertFalse(self.job2.get_application_state() == "stopped")
         self.assertEqual(self.job2.get_application_state(), "terminated")
 
     def test_terminate_job(self):
@@ -349,6 +354,17 @@ class TestKubeJobsPlugin(unittest.TestCase):
         self.assertEqual(self.job1.get_application_state(), 'ongoing')
         self.job1.change_state_to_completed()
         self.assertEqual(self.job1.get_application_state(), 'completed')
+
+    def test_stop_job(self):
+        """
+        Test that the stop request works, changing
+        the status to stopped and removing the redis queue.
+        """
+
+        self.job1.stop_application()
+        self.assertEqual(self.job1.get_application_state(), 'stopped')
+        self.job2.stop_application()
+        self.assertEqual(self.job2.get_application_state(), 'stopped')
 
 
 class TestKubeJobsProvider(unittest.TestCase):
