@@ -84,6 +84,17 @@ def submission_status(submission_id):
     return u.render(api.submission_status(submission_id))
 
 
+@rest.get('/submissions/<submission_id>/report')
+def submission_report(submission_id):
+    """ Show the detailed report of
+        a specific submission.
+
+    Normal response codes: 200
+    Error response codes: 400
+    """
+    return u.render(api.submission_report(submission_id))
+
+
 @rest.get('/submissions/<submission_id>/errors')
 def submission_errors(submission_id):
     """ Show the errors in an execution.

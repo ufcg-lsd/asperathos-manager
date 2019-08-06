@@ -1,4 +1,4 @@
-# Copyright (c) 2017 LSD - UFCG.
+# Copyright (c) 2019 UFCG-LSD.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,14 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from flask import Flask
-from broker.api.v10 import rest
-from broker.service import api
-from broker.utils import logger
+import unittest
+
+from broker.service.job_cleaner_daemon import JobCleanerDaemon
 
 
-def main():
-    app = Flask(__name__)
-    app.register_blueprint(rest)
-    logger.configure_logging()
-    app.run(host='0.0.0.0', port=api.port)
+class TestJobCleaner(unittest.TestCase):
+
+    """
+    Set up Job Cleaner instance
+    """
+
+    def setUp(self):
+        self.cleaner = JobCleanerDaemon({})
+
+    def tearDown(self):
+        pass
+
+
+if __name__ == "__main__":
+    unittest.main()

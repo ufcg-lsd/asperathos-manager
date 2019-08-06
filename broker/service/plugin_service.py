@@ -57,7 +57,6 @@ def check_submission(db, submission_data):
     import module is 'kubejobs', this replaces plugin name
     to plugin module.
     '''
-
     plugin_fields = [("plugin", "manager"),
                      ("control_plugin", "controller"),
                      ("monitor_plugin", "monitor"),

@@ -36,6 +36,8 @@ try:
     host = config.get("general", "host")
     port = config.getint('general', 'port')
     plugins = config.get('general', 'plugins').split(',')
+    cleaner_interval = config.getint('general', 'cleaner_interval',
+                                     fallback=1)
 
     """ Validate if really exists a section to listed plugins """
     for plugin in plugins:
@@ -73,7 +75,8 @@ try:
                 redis_ip = config.get('kubejobs', 'redis_ip')
 
 except Exception as e:
-    API_LOG.log("Error: %s" % e.message)
+    print(e)
+    API_LOG.log("Error: %s" % e)
     quit()
 
 

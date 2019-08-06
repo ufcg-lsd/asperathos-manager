@@ -29,43 +29,36 @@ class SqliteJobPersistence(PersistenceInterface):
             pass
 
     def put(self, app_id, state):
-
         new_state = JobState(app_id=app_id,
                              obj_serialized=dill.dumps(state))
         try:
             new_state.save()
 
         except peewee.IntegrityError:
-            JobState.update({JobState.
-                             obj_serialized: dill.dumps(state)}).\
-                            where(JobState.app_id == app_id)
+            query = JobState.update({JobState.
+                                     obj_serialized: dill.dumps(state)}).\
+                                     where(JobState.app_id == app_id)
+            query.execute()
 
     def get(self, app_id):
-
         state = JobState.get(JobState.app_id == app_id)
         return dill.loads(state.obj_serialized)
 
-    def delete(self, app_id):
+    def get_finished_jobs(self):
+        return dict(filter(lambda obj: obj[1].del_resources_authorization,
+                           self.get_all().items()))
 
+    def delete(self, app_id):
         state = JobState.get(JobState.app_id == app_id)
         state.delete_instance()
 
     def delete_all(self):
-
         JobState.delete()
 
     def get_all(self):
-
         all_states = JobState.select()
-
         all_jobs = dict([(obj.app_id, dill.loads(obj.obj_serialized))
                          for obj in all_states])
-
-        for key in all_jobs:
-            current_job = all_jobs.get(key)
-            current_job.synchronize()
-            self.put(current_job.app_id, current_job)
-
         return all_jobs
 
 

@@ -66,7 +66,8 @@ class TestKubeJobsPlugin(unittest.TestCase):
         """
         job1_repr = {'app_id': self.job_id1,
                      'status': 'created',
-                     'visualizer_url': "URL not generated!"
+                     'visualizer_url': "URL not generated!",
+                     'execution_time': "Job is not finished!"
                      }
 
         job1 = json.loads(self.job1.__repr__())
@@ -116,18 +117,18 @@ class TestKubeJobsPlugin(unittest.TestCase):
         """
         self.assertEqual(self.job1.setup_redis(), ("0.0.0.0", "2364"))
 
-    def test_setup_visualizer(self):
+    def test_setup_metric_persistence(self):
         """
         Verify that visualizer components has been created and connected
         """
         datasource_type = "influxdb"
-        data = {'enable_visualizer': True,
+        data = {'enable_detailed_report': True,
                 'visualizer_info':
                     {'datasource_type': datasource_type}
                 }
 
         database_data = {'port': 1234, 'name': 'asperathos'}
-        self.assertEqual(self.job2.setup_visualizer(data),
+        self.assertEqual(self.job2.setup_metric_persistence(data),
                          (database_data, datasource_type))
 
     def test_setup_datasource(self):
@@ -189,7 +190,8 @@ class TestKubeJobsPlugin(unittest.TestCase):
                               'redis_port': redis_port,
                               'enable_visualizer': False,
                               'scaling_strategy': '',
-                              'heuristic_options': ''
+                              'heuristic_options': '',
+                              'enable_detailed_report': False
                               }
 
         now = datetime.datetime.now()
@@ -197,8 +199,8 @@ class TestKubeJobsPlugin(unittest.TestCase):
         monitor_info_after.\
             update({'submission_time':
                     now.strftime('%Y-%m-%dT%H:%M:%S.%fGMT')})
-
-        self.job1.update_monitor_info(data, database_data, datasource_type,
+        self.job1.data = data
+        self.job1.update_monitor_info(database_data, datasource_type,
                                       queue_size, redis_ip, redis_port)
         self.assertEqual(data.get('monitor_info'), monitor_info_after)
 
@@ -213,7 +215,10 @@ class TestKubeJobsPlugin(unittest.TestCase):
             m.get(api.visualizer_url + '/visualizing/' + self.job_id1,
                   text="{'url': 'http://visualizer-url'}")
 
-            data = {'visualizer_info': {}}
+            data = {'visualizer_info': {},
+                    'enable_visualizer': True,
+                    'enable_detailed_report': True
+                    }
             self.job1.start_visualization(data)
             self.assertEqual(self.job1.get_visualizer_url(),
                              "http://visualizer-url")
@@ -267,7 +272,6 @@ class TestKubeJobsPlugin(unittest.TestCase):
         Verify that stop monitoring, scaling and visualizing
         request has done without errors,
         """
-        data = {'visualizer_info': {}}
         with requests_mock.Mocker() as m:
             m.put(api.visualizer_url + '/visualizing/'
                   + self.job_id1 + '/stop', text="")
@@ -276,7 +280,7 @@ class TestKubeJobsPlugin(unittest.TestCase):
             m.put(api.controller_url + '/scaling/'
                   + self.job_id1 + '/stop', text="")
 
-            self.job1.delete_job_resources(data)
+            self.job1.delete_job_resources()
 
     def test_get_update_application_state(self):
         """
@@ -346,14 +350,111 @@ class TestKubeJobsPlugin(unittest.TestCase):
                 'img': 'dockerhub.com/image:latest',
                 'init_size': 1,
                 'env_vars': {'VAR1': 123},
-                'config_id': 12321
+                'config_id': 12321,
+                "job_resources_lifetime": 0,
+                'monitor_info': {},
+                'monitor_plugin': 'kubejobs'
                 }
+        response = json.dumps({'final_error': 0,
+                               'final_replicas': 0,
+                               'min_error': 0,
+                               'max_error': 0,
+                               'heuristic_options': {},
+                               'scaling_strategy': 'pid'
+                               })
+        with requests_mock.Mocker() as m:
+            m.get(api.monitor_url + '/monitoring/' +
+                  self.job1.app_id + '/report', text=response)
+            self.job1.data = data
+            self.assertEqual(self.job1.get_application_state(), 'created')
+            self.job1.trigger_job(data)
+            self.assertEqual(self.job1.get_application_state(), 'ongoing')
+            self.job1.wait_job_finish()
+            self.assertEqual(self.job1.get_application_state(), 'completed')
 
-        self.assertEqual(self.job1.get_application_state(), 'created')
-        self.job1.trigger_job(data)
-        self.assertEqual(self.job1.get_application_state(), 'ongoing')
-        self.job1.change_state_to_completed()
-        self.assertEqual(self.job1.get_application_state(), 'completed')
+    def test_enable_detailed_report_if_visualizer_is_enabled(self):
+
+        self.job1.data = {'enable_visualizer': True}
+        self.assertFalse(self.job1.enable_detailed_report)
+        self.job1.enable_detailed_report_if_visualizer_is_enabled()
+        self.assertTrue(self.job1.enable_detailed_report)
+
+    def test_get_report(self):
+
+        response = json.dumps({'final_error': 0,
+                               'final_replicas': 0,
+                               'min_error': 0,
+                               'max_error': 0,
+                               'heuristic_options': {},
+                               'scaling_strategy': 'pid'
+                               })
+        data = {'monitor_info': {},
+                'monitor_plugin': 'kubejobs'
+                }
+        self.job1.data = data
+        with requests_mock.Mocker() as m:
+            m.get(api.monitor_url + '/monitoring/' +
+                  self.job1.app_id + '/report', text=response)
+            self.job1.get_report()
+
+        self.assertEqual(self.job1.report, json.loads(response))
+
+    def test_get_detailed_report(self):
+
+        response = json.dumps({'final_error': 0,
+                               'final_replicas': 0,
+                               'min_error': 0,
+                               'max_error': 0,
+                               'heuristic_options': {},
+                               'scaling_strategy': 'pid'
+                               })
+        data = {'monitor_info': {},
+                'monitor_plugin': 'kubejobs'
+                }
+        self.job1.data = data
+        self.job1.enable_detailed_report = False
+        report = {'message': 'The detailed report is '
+                  'disabled to this job!'}
+        self.assertEqual(self.job1.get_detailed_report(), report)
+
+        self.job1.enable_detailed_report = True
+        report = {'message': 'Monitoring does not exists '
+                  'yet or has been deleted!'}
+        with requests_mock.Mocker() as m:
+            m.get(api.monitor_url + '/monitoring/' + self.job1.app_id +
+                  '/report/detailed', text=json.dumps({'error_code': 'erro'}))
+            self.assertEqual(self.job1.get_detailed_report(), report)
+
+            m.get(api.monitor_url + '/monitoring/' +
+                  self.job1.app_id + '/report/detailed', text=response)
+            self.assertEqual(self.job1.get_detailed_report(),
+                             json.loads(response))
+
+    def test_add_redis_info_to_data(self):
+
+        self.job1.data = {}
+        self.job1.add_redis_info_to_data('0.0.0.0', 2136)
+        self.assertTrue('redis_ip' in self.job1.data)
+        self.assertTrue('redis_port' in self.job1.data)
+        self.assertEqual(self.job1.data['redis_ip'], '0.0.0.0')
+        self.assertEqual(self.job1.data['redis_port'], 2136)
+
+    def test_get_control_parameters(self):
+
+        schedule_strategy = 'pid'
+        heuristic_options = {"proportional_gain": 0.1,
+                             "derivative_gain": 0,
+                             "integral_gain": 0
+                             }
+        data = {'control_parameters': {'schedule_strategy': schedule_strategy,
+                                       'heuristic_options': heuristic_options
+                                       }
+                }
+        self.job1.data = data
+        strategy, heuristics = self.job1._get_control_parameters()
+
+        self.assertEqual(strategy, schedule_strategy)
+        self.assertEqual(heuristics, heuristic_options)
 
     def test_stop_job(self):
         """
