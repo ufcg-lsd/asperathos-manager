@@ -20,6 +20,8 @@ import six
 import threading
 import time
 import uuid
+import traceback
+
 
 from broker.service import api
 from broker.plugins import base
@@ -162,6 +164,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             self.wait_job_finish(check_interval=1)
 
         except Exception as ex:
+            traceback.print_exc()
             self.terminated = True
             self.update_application_state("error")
             KUBEJOBS_LOG.log("ERROR: %s" % ex)
@@ -206,12 +209,9 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
 
         if 'enable_detailed_report' in data:
             self.enable_detailed_report = data['enable_detailed_report']
-        datasource_type = None
+        datasource_type = data['visualizer_info']['datasource_type']
         database_data = {}
-        if self.enable_detailed_report:
-            KUBEJOBS_LOG.log("Creating metrics persistence platform...")
-            datasource_type = data['visualizer_info']['datasource_type']
-            database_data = self.setup_datasource(datasource_type)
+        database_data = self.setup_datasource(datasource_type)
 
         return database_data, datasource_type
 
@@ -457,12 +457,12 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         data_model = {
             "cmd": list,
             "control_parameters": dict,
-            "control_plugin": six.string_types,
+            "control_plugin": dict,
             "env_vars": dict,
             "img": six.string_types,
             "init_size": int,
             "monitor_info": dict,
-            "monitor_plugin": six.string_types,
+            "monitor_plugin": dict,
             "redis_workload": six.string_types,
             "enable_visualizer": bool
             # The parameters below are only needed if enable_visualizer is True
@@ -484,7 +484,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                 raise ex.BadRequestException(
                     "Variable \"visualizer_plugin\" is missing")
 
-            if (not isinstance(data["visualizer_plugin"], six.string_types)):
+            if (not isinstance(data["visualizer_plugin"], dict)):
                 raise ex.BadRequestException(
                     "\"visualizer_plugin\" has unexpected variable type: {}.\
                      Was expecting {}"

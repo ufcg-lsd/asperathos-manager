@@ -166,13 +166,8 @@ def run_submission(data):
             API_LOG.log("Unauthorized request")
             raise ex.UnauthorizedException()
 
-    if data['plugin'] not in api.plugins:
-        API_LOG.log("Plugin \"{}\" is missing.\
-        The plugins available are {}".format(data['plugin'], api.plugin))
-        raise ex.BadRequestException("Plugin \"{}\" is missing.\
-        The plugins available are {}".format(data['plugin'], api.plugin))
 
-    plugin = plugin_service.get_plugin(data['plugin'])
+    plugin = plugin_service.get_plugin(data['plugin']['module'])
     submission_data = data['plugin_info']
     submission_data['enable_auth'] = data['enable_auth']
     submission_id, executor = plugin.execute(submission_data)
