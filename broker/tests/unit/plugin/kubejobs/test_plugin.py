@@ -67,9 +67,10 @@ class TestKubeJobsPlugin(unittest.TestCase):
         job1_repr = {'app_id': self.job_id1,
                      'status': 'created',
                      'visualizer_url': "URL not generated!",
-                     'execution_time': "Job is not finished!"
+                     'execution_time': "Job is not finished!",
+                     'redis_ip': None,
+                     'redis_port': None
                      }
-
         job1 = json.loads(self.job1.__repr__())
         job1.pop('starting_time')
         self.assertEqual(job1, job1_repr)
@@ -115,7 +116,9 @@ class TestKubeJobsPlugin(unittest.TestCase):
         """
         Verify that redis has been created and connected
         """
-        self.assertEqual(self.job1.setup_redis(), ("0.0.0.0", "2364"))
+        self.job1.setup_redis()
+        self.assertEqual(self.job1.redis_ip, "0.0.0.0")
+        self.assertEqual(self.job1.redis_port, "2364")
 
     def test_setup_metric_persistence(self):
         """
@@ -191,7 +194,9 @@ class TestKubeJobsPlugin(unittest.TestCase):
                               'enable_visualizer': False,
                               'scaling_strategy': '',
                               'heuristic_options': '',
-                              'enable_detailed_report': False
+                              'enable_detailed_report': False,
+                              'redis_ip': redis_ip,
+                              'redis_port': redis_port
                               }
 
         now = datetime.datetime.now()
@@ -200,8 +205,9 @@ class TestKubeJobsPlugin(unittest.TestCase):
             update({'submission_time':
                     now.strftime('%Y-%m-%dT%H:%M:%S.%fGMT')})
         self.job1.data = data
+        self.job1.setup_redis()
         self.job1.update_monitor_info(database_data, datasource_type,
-                                      queue_size, redis_ip, redis_port)
+                                      queue_size)
         self.assertEqual(data.get('monitor_info'), monitor_info_after)
 
     def test_start_visualization(self):
@@ -433,11 +439,12 @@ class TestKubeJobsPlugin(unittest.TestCase):
     def test_add_redis_info_to_data(self):
 
         self.job1.data = {}
-        self.job1.add_redis_info_to_data('0.0.0.0', 2136)
+        self.job1.setup_redis()
+        self.job1.add_redis_info_to_data()
         self.assertTrue('redis_ip' in self.job1.data)
         self.assertTrue('redis_port' in self.job1.data)
         self.assertEqual(self.job1.data['redis_ip'], '0.0.0.0')
-        self.assertEqual(self.job1.data['redis_port'], 2136)
+        self.assertEqual(self.job1.data['redis_port'], '2364')
 
     def test_get_control_parameters(self):
 
