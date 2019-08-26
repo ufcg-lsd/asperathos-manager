@@ -1,0 +1,4 @@
+Host github.com
+    StrictHostKeyChecking no
+Host git.lsd.ufcg.edu.br
+    StrictHostKeyChecking no
