@@ -31,12 +31,12 @@ pipeline {
   }
   post {
     cleanup {
-      labelledShell script: 'docker stop docker-manager-$BUILD_ID', label: "Stop Docker container"
-      labelledShell script: 'docker rm -v docker-manager-$BUILD_ID', label: "Remove Docker container"
-      labelledShell script: 'docker rm -v integration-tests-manager-$BUILD_ID', label: "Remove integration tests container"
-      labelledShell script: 'docker network rm network-manager-$BUILD_ID', label: "Remove test network"
-      labelledShell script: 'docker volume rm d54-data-manager-$BUILD_ID', label: "Remove D5.4 volume"
-      labelledShell script: 'docker volume rm organon-data-manager-$BUILD_ID', label: "Remove Organon volume"
+      labelledShell script: 'docker stop docker-manager-$BUILD_ID || true', label: "Stop Docker container"
+      labelledShell script: 'docker rm -v docker-manager-$BUILD_ID || true', label: "Remove Docker container"
+      labelledShell script: 'docker rm -v integration-tests-manager-$BUILD_ID || true', label: "Remove integration tests container"
+      labelledShell script: 'docker network rm network-manager-$BUILD_ID || true', label: "Remove test network"
+      labelledShell script: 'docker volume rm d54-data-manager-$BUILD_ID || true', label: "Remove D5.4 volume"
+      labelledShell script: 'docker volume rm organon-data-manager-$BUILD_ID || true', label: "Remove Organon volume"
     }    
      failure {
       labelledShell script: 'docker exec docker-manager-$BUILD_ID docker logs testenv_manager_1', label: "Manager logs"
