@@ -121,7 +121,7 @@ def install_plugin(data):
     component = data.get('component')
 
     plugin_connector.put(plugin_name=name, source=source,
-                         plugin_source=source,
+                         plugin_source=plugin_repo,
                          component=component,
                          plugin_module=module)
 
