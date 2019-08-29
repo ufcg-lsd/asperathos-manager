@@ -128,7 +128,9 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                           self.job_resources_lifetime,
                           self.terminated,
                           self.job_completed,
-                          self.enable_visualizer))
+                          self.enable_visualizer,
+                          self.redis_ip,
+                          self.redis_port))
 
     def get_db_connector(self):
         if (api.plugin_name == "etcd"):
@@ -550,6 +552,7 @@ def rebuild(app_id, starting_time,
             job_resources_lifetime,
             terminated, job_completed,
             enable_visualizer, redis_ip, redis_port):
+
     obj = KubeJobsExecutor(app_id=app_id,
                            starting_time=starting_time,
                            status=status,
