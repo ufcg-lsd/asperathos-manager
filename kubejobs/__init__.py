@@ -48,13 +48,16 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                  data=None, enable_detailed_report=False,
                  execution_time="Job is not finished!",
                  job_resources_lifetime=0, report={},
-                 del_resources_authorization=False, finish_time=None):
+                 del_resources_authorization=False, finish_time=None,
+                 redis_ip=None, redis_port=None):
 
         self.job_resources_lifetime = job_resources_lifetime
         self.id = ids.ID_Generator().get_ID()
         self.app_id = app_id
         self.starting_time = starting_time
         self.rds = redis
+        self.redis_ip = redis_ip
+        self.redis_port = redis_port
         self.status = status
         self.job_completed = job_completed
         self.terminated = terminated
@@ -76,7 +79,9 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             "starting_time": str(self.get_application_start_time()),
             "status": self.status,
             "visualizer_url": self.visualizer_url,
-            "execution_time": self.execution_time
+            "execution_time": self.execution_time,
+            "redis_ip": self.redis_ip,
+            "redis_port": self.redis_port
         }
 
         representation.update(self.report)
@@ -123,7 +128,9 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                           self.job_resources_lifetime,
                           self.terminated,
                           self.job_completed,
-                          self.enable_visualizer))
+                          self.enable_visualizer,
+                          self.redis_ip,
+                          self.redis_port))
 
     def get_db_connector(self):
         if (api.plugin_name == "etcd"):
@@ -145,19 +152,19 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             self.enable_detailed_report_if_visualizer_is_enabled()
             self.activate_related_cluster(data)
             self.update_env_vars(data)
-            redis_ip, redis_port = self.setup_redis()
+            self.setup_redis()
             database_data, datasource_type = \
                 self.setup_metric_persistence(data)
-            self.update_visualizer_info(data, database_data, redis_ip)
+            self.update_visualizer_info(data, database_data, self.redis_ip)
             self.start_visualization(data)
             self.persist_state()
             queue_size = self.push_jobs_to_redis(data)
             self.trigger_job(data)
             self.persist_state()
             self.update_monitor_info(database_data, datasource_type,
-                                     queue_size, redis_ip, redis_port)
+                                     queue_size)
             self.start_monitoring(data)
-            self.add_redis_info_to_data(redis_ip, redis_port)
+            self.add_redis_info_to_data()
             self.start_controlling(data)
             self.wait_job_finish(check_interval=1)
 
@@ -169,8 +176,9 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
 
         KUBEJOBS_LOG.log("Application finished.")
 
-    def add_redis_info_to_data(self, redis_ip, redis_port):
-        self.data.update({'redis_ip': redis_ip, 'redis_port': redis_port})
+    def add_redis_info_to_data(self):
+        self.data.update({'redis_ip': self.redis_ip,
+                          'redis_port': self.redis_port})
 
     def get_workload(self, data):
         # Download files that contains the items
@@ -194,13 +202,13 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
 
     def setup_redis(self):
         # Provision a redis database for the job. Die in case of error.
-        redis_ip, redis_port = self.k8s.provision_redis_or_die(self.app_id)
+        self.redis_ip, self.redis_port = \
+            self.k8s.provision_redis_or_die(self.app_id)
 
         # create a new Redis client and fill the work queue
         if(self.rds is None):
-            self.rds = redis.StrictRedis(host=redis_ip, port=redis_port)
-
-        return redis_ip, redis_port
+            self.rds = redis.StrictRedis(host=self.redis_ip,
+                                         port=self.redis_port)
 
     def setup_metric_persistence(self, data):
 
@@ -233,8 +241,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                     'password': data['password']})
 
     def update_monitor_info(self, database_data,
-                            datasource_type, queue_size,
-                            redis_ip, redis_port):
+                            datasource_type, queue_size):
 
         schedule_strategy, heuristic_options = \
             self._get_control_parameters()
@@ -245,8 +252,8 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                     'number_of_jobs': queue_size,
                     'submission_time': self.starting_time.
                     strftime('%Y-%m-%dT%H:%M:%S.%fGMT'),
-                    'redis_ip': redis_ip,
-                    'redis_port': redis_port,
+                    'redis_ip': self.redis_ip,
+                    'redis_port': self.redis_port,
                     'enable_visualizer': self.enable_visualizer,
                     'enable_detailed_report': self.enable_detailed_report,
                     'scaling_strategy': schedule_strategy,
@@ -544,7 +551,8 @@ def rebuild(app_id, starting_time,
             del_resources_auth, finish_time,
             job_resources_lifetime,
             terminated, job_completed,
-            enable_visualizer):
+            enable_visualizer, redis_ip, redis_port):
+
     obj = KubeJobsExecutor(app_id=app_id,
                            starting_time=starting_time,
                            status=status,
@@ -557,7 +565,9 @@ def rebuild(app_id, starting_time,
                            job_resources_lifetime=job_resources_lifetime,
                            terminated=terminated,
                            job_completed=job_completed,
-                           enable_visualizer=enable_visualizer)
+                           enable_visualizer=enable_visualizer,
+                           redis_ip=redis_ip,
+                           redis_port=redis_port)
     return obj
 
 
