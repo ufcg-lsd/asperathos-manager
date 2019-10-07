@@ -89,14 +89,16 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
 
     def get_report(self):
         report = {}
-        while len(report) < 6 or "error_code" in report:
-            report = monitor.get_job_report(api.monitor_url,
+        status_code = -1
+        while status_code != 200 and status_code != 400:
+            status_code, report = monitor.get_job_report(
+                                            api.monitor_url,
                                             self.app_id,
                                             self.data['monitor_plugin'],
                                             self.data['monitor_info'])
             time.sleep(1)
 
-        if "error_code" in report:
+        if status_code == 400:
             report = {'message': 'Monitoring does not exists '
                       'yet or has been deleted!'}
         self.report = report
