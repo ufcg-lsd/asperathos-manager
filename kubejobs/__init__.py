@@ -301,12 +301,22 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
     def trigger_job(self, data):
         KUBEJOBS_LOG.log("Creating Job")
 
-        self.k8s.create_job(self.app_id,
-                            data['cmd'],
-                            data['img'],
-                            data['init_size'],
-                            data['env_vars'],
-                            config_id=data["config_id"])
+        kwargs = {
+            'app_id': self.app_id,
+            'cmd': data['cmd'],
+            'img': data['img'],
+            'init_size': data['init_size'],
+            'env_vars': data['env_vars'],
+            'config_id': data['config_id']
+        }
+
+        if data.get("k8s_resources_control"):
+            kwargs.update({
+                "limits": data["k8s_resources_control"]['limits'],
+                "requests": data["k8s_resources_control"]['requests']
+                           })
+
+        self.k8s.create_job(**kwargs)
 
         KUBEJOBS_LOG.log("Job running...")
         self.update_application_state("ongoing")

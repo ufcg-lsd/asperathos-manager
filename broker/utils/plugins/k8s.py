@@ -34,7 +34,7 @@ def create_job(app_id, cmd, img, init_size, env_vars,
                scone_version="1",
                isgx="dev-isgx",
                devisgx="/dev/isgx",
-               ):
+               **kwargs):
 
     kube.config.load_kube_config(api.k8s_conf_path)
 
@@ -63,7 +63,13 @@ def create_job(app_id, cmd, img, init_size, env_vars,
         )
     )
 
+    resources = kube.client.V1ResourceRequirements(
+        limits=kwargs.get('limits'),
+        requests=kwargs.get('requests')
+    )
+
     container_spec = kube.client.V1Container(
+        resources=resources,
         command=cmd,
         env=envs,
         image=img,
