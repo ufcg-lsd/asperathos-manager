@@ -305,3 +305,24 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
     		}
 			}
 		```
+## Install a plugin
+  Install or update a plugin 
+
+* **URL**: `/plugins`
+* **Method:** `POST`
+* **JSON Request:**
+	* ```javascript
+		{
+	        "plugin_source":[string],
+	        "install_source":[string],
+	        "component": [string]
+        }
+* **Success Response:**
+  * **Code:** `200` <br /> **Content:** 
+	  * ```javascript
+	    {
+			"message": [string]
+	    }
+		```
+* **Error Response:**
+  * **Code:** `400 BAD REQUEST`
