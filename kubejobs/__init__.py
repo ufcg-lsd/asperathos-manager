@@ -46,7 +46,6 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                  visualizer_url="URL not generated!",
                  enable_visualizer=False,
                  data=None, enable_detailed_report=False,
-                 execution_time="Job is not finished!",
                  job_resources_lifetime=0, report={},
                  del_resources_authorization=False, finish_time=None,
                  redis_ip=None, redis_port=None):
@@ -66,7 +65,6 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         self.db_connector = self.get_db_connector()
         self.enable_visualizer = enable_visualizer
         self.enable_detailed_report = enable_detailed_report
-        self.execution_time = execution_time
         self.report = report
         self.data = data
         self.finish_time = finish_time
@@ -79,7 +77,6 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             "starting_time": str(self.get_application_start_time()),
             "status": self.status,
             "visualizer_url": self.visualizer_url,
-            "execution_time": self.execution_time,
             "redis_ip": self.redis_ip,
             "redis_port": self.redis_port
         }
@@ -123,7 +120,6 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                           self.status,
                           self.visualizer_url,
                           self.data,
-                          self.execution_time,
                           self.report,
                           self.del_resources_authorization,
                           self.finish_time,
@@ -336,8 +332,6 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             while not self.job_completed and not self.terminated:
                 self.synchronize()
                 time.sleep(check_interval)
-            if self.execution_time == 'Job is not finished!':
-                self.execution_time = self.get_application_execution_time()
             KUBEJOBS_LOG.log("Job finished - Status: "
                              + self.get_application_state())
             self.get_report()
@@ -393,14 +387,6 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
 
     def get_visualizer_url(self):
         return self.visualizer_url
-
-    def get_application_execution_time(self):
-        if(self.starting_time is not None):
-            return (
-                datetime.datetime.now() -
-                self.starting_time).total_seconds()
-        else:
-            return "Job is not running yet!"
 
     def get_application_start_time(self):
         if(self.starting_time is not None):
@@ -558,8 +544,7 @@ class KubeJobsProvider(base.PluginInterface):
 
 def rebuild(app_id, starting_time,
             status, visualizer_url,
-            data,
-            execution_time, report,
+            data, report,
             del_resources_auth, finish_time,
             job_resources_lifetime,
             terminated, job_completed,
@@ -570,7 +555,6 @@ def rebuild(app_id, starting_time,
                            status=status,
                            visualizer_url=visualizer_url,
                            data=data,
-                           execution_time=execution_time,
                            report=report,
                            del_resources_authorization=del_resources_auth,
                            finish_time=finish_time,

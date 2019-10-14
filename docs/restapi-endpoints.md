@@ -113,14 +113,40 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 * **Method:** `GET`
 * **Success Response:**
   * **Code:** `200` <br /> **Content:** 
+
+	**Before job finish**
 	  * ```javascript
-	    {
+	    {	
+		   app_id: [string]
 	       status : [string],
 	       execution_time : [string],
-	       start_time : [string]
+	       starting_time : [string],
+		   visualizer_url: [string],
+		   redis_ip: [string],
+		   redis_port: [string]
 	    }
+	   	```
+	**After job finish**
+	  * ```javascript	
+		{	
+		   app_id: [string]
+	       status : [string],
+	       execution_time : [string],
+	       starting_time : [string],
+		   visualizer_url: [string],
+		   redis_ip: [string],
+		   redis_port: [string],
+		   execution_time: [int],
+		   scaling_strategy: [string],
+		   heuristic_options: [string],
+		   min_error: [float],
+		   max_error: [float],
+		   final_replicas: [int],
+		   final_error: [float]
+	    }
+
 		```
-		
+	
 * **Error Response:**
   * **Code:** `400 BAD REQUEST` <br />
 
