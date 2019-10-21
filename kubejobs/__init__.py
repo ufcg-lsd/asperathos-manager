@@ -307,7 +307,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             'img': data['img'],
             'init_size': data['init_size'],
             'env_vars': data['env_vars'],
-            'config_id': data['config_id']
+            'config_id': data.get('config_id')
         }
 
         if data.get("k8s_resources_control"):
