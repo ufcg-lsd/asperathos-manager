@@ -195,8 +195,12 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         data['env_vars']['REDIS_HOST'] = 'redis-%s' % self.app_id
 
         # inject SCONE_CONFIG_ID in the environment
-        # FIXME: make SCONE_CONFIG_ID optional in submission
-        data['env_vars']['SCONE_CONFIG_ID'] = data['config_id']
+        config_id = data.get('config_id')
+        if config_id is not None:
+            KUBEJOBS_LOG.log("You should pass the config_id variable "
+                             "through the env_var parameter. Passing this way"
+                             "is deprecated.")
+            data['env_vars']['SCONE_CONFIG_ID'] = config_id
 
     def setup_redis(self):
         # Provision a redis database for the job. Die in case of error.
