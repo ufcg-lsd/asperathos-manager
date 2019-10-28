@@ -34,6 +34,7 @@ def create_job(app_id, cmd, img, init_size, env_vars,
                scone_version="1",
                isgx="dev-isgx",
                devisgx="/dev/isgx",
+               job_termination_grace_period_seconds=30,
                **kwargs):
 
     kube.config.load_kube_config(api.k8s_conf_path)
@@ -81,6 +82,7 @@ def create_job(app_id, cmd, img, init_size, env_vars,
             privileged=True
         ))
     pod_spec = kube.client.V1PodSpec(
+        termination_grace_period_seconds=job_termination_grace_period_seconds,
         containers=[container_spec],
         restart_policy="OnFailure",
         volumes=[devisgx])

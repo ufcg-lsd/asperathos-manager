@@ -85,7 +85,8 @@ class MockKube():
         return out
 
     def create_job(self, app_id, cmd, img, init_size,
-                   env_vars, config_id=""):
+                   env_vars, config_id="",
+                   job_termination_grace_period_seconds=30):
         """ Function that simulates the creation of a job
 
         Args:

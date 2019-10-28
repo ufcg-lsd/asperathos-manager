@@ -300,14 +300,16 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
 
     def trigger_job(self, data):
         KUBEJOBS_LOG.log("Creating Job")
-
+        termination_grace = data.get('termination_grace_period_seconds',
+                                     30)
         kwargs = {
             'app_id': self.app_id,
             'cmd': data['cmd'],
             'img': data['img'],
             'init_size': data['init_size'],
             'env_vars': data['env_vars'],
-            'config_id': data.get('config_id')
+            'config_id': data.get('config_id'),
+            'job_termination_grace_period_seconds': termination_grace
         }
 
         if data.get("k8s_resources_control"):
