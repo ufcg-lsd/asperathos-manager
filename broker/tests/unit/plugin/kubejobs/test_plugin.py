@@ -176,7 +176,9 @@ class TestKubeJobsPlugin(unittest.TestCase):
         data = {'monitor_info': {},
                 'control_parameters': {
                     'schedule_strategy': '',
-                    'heuristic_options': ''
+                    'heuristic_options': '',
+                    'max_rep': 5,
+                    'min_rep': 1
                     }
                 }
         database_data = {}
@@ -195,7 +197,9 @@ class TestKubeJobsPlugin(unittest.TestCase):
                               'heuristic_options': '',
                               'enable_detailed_report': False,
                               'redis_ip': redis_ip,
-                              'redis_port': redis_port
+                              'redis_port': redis_port,
+                              'max_replicas': 5,
+                              'min_replicas': 1
                               }
 
         now = datetime.datetime.now()

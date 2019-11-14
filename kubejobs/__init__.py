@@ -259,7 +259,9 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                     'enable_visualizer': self.enable_visualizer,
                     'enable_detailed_report': self.enable_detailed_report,
                     'scaling_strategy': schedule_strategy,
-                    'heuristic_options': heuristic_options
+                    'heuristic_options': heuristic_options,
+                    'max_replicas': self.data["control_parameters"]["max_rep"],
+                    'min_replicas': self.data["control_parameters"]["min_rep"]
                     })
         # 'cpu_agent_port': agent_port})
 
