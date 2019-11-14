@@ -23,4 +23,4 @@ def main():
     app = Flask(__name__)
     app.register_blueprint(rest)
     logger.configure_logging()
-    app.run(host='0.0.0.0', port=api.port, debug=True)
+    app.run(host='0.0.0.0', port=api.port)
