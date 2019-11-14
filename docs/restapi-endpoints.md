@@ -338,10 +338,12 @@ This section provides a detailed list of avaliable endpoints in Broker REST API.
 * **Method:** `POST`
 * **JSON Request:**
 	* ```javascript
-		{
-	        "plugin_source":[string],
-	        "install_source":[string],
-	        "component": [string]
+        {
+            "plugin_name": [string],
+            "plugin_source": [string],
+            "install_source": [string],
+            "plugin_module": [string],
+            "component": [string]
         }
 * **Success Response:**
   * **Code:** `200` <br /> **Content:** 
