@@ -226,9 +226,10 @@ def delete_all_submissions(data):
     """
     return u.render(api.delete_all_submissions(data))
 
+
 @rest.get('/healthz')
 def healthz():
     """ A health check endpoint .
     Normal response codes: 200
     """
-    return u.render(status=200)
+    return u.render('OK', status=200)
