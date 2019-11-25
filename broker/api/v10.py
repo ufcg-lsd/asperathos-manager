@@ -225,3 +225,11 @@ def delete_all_submissions(data):
     Error response codes: 400
     """
     return u.render(api.delete_all_submissions(data))
+
+
+@rest.get('/healthz')
+def healthz():
+    """ A health check endpoint .
+    Normal response codes: 200
+    """
+    return u.render("OK", status=200)
