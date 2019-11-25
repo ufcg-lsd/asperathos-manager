@@ -220,10 +220,10 @@ def bad_request(error):
     LOG.log("Validation Error occurred: "
             "error_code={code}, error_message={message}, "
             "error_name={name}".format(code=error_code,
-                                       message=error.message,
+                                       message=error,
                                        name=error.code))
 
-    return render_error_message(error_code, error.message, error.code)
+    return render_error_message(error_code, error, error.code)
 
 
 def unauthorized(error):
@@ -232,10 +232,10 @@ def unauthorized(error):
     LOG.log("Authorization Error occurred: "
             "error_code={code}, error_message={message}, "
             "error_name={name}".format(code=error_code,
-                                       message=error.message,
+                                       message=error,
                                        name=error.code))
 
-    return render_error_message(error_code, error.message, error.code)
+    return render_error_message(error_code, error, error.code)
 
 
 def access_denied(error):
@@ -244,10 +244,10 @@ def access_denied(error):
     LOG.log("Access Denied: "
             "error_code={code}, error_message={message}, "
             "error_name={name}".format(code=error_code,
-                                       message=error.message,
+                                       message=error,
                                        name=error.code))
 
-    return render_error_message(error_code, error.message, error.code)
+    return render_error_message(error_code, error, error.code)
 
 
 def not_found(error):
@@ -256,7 +256,7 @@ def not_found(error):
     LOG.log("Not Found exception occurred: "
             "error_code={code}, error_message={message}, "
             "error_name={name}".format(code=error_code,
-                                       message=error.message,
+                                       message=error,
                                        name=error.code))
 
-    return render_error_message(error_code, error.message, error.code)
+    return render_error_message(error_code, error, error.code)
