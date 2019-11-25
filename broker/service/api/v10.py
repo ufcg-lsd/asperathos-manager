@@ -577,7 +577,7 @@ def delete_all_submissions(data):
     check_authorization(data)
     db_connector.delete_all()
 
-    for key in submissions.keys():
+    for key in list(submissions):
         delete_submission(key, data)
 
 
