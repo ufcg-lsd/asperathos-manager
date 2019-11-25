@@ -531,7 +531,7 @@ def get_activated_cluster():
     """
     global activated_cluster
     response = {"message": "There is no active cluster"}
-    if (activate_cluster != None):
+    if (activate_cluster is not None):
         response = {activated_cluster: clusters[activated_cluster]}
     return response
 
