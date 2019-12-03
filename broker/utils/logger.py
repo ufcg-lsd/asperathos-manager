@@ -21,6 +21,7 @@ class Log:
     def __init__(self, name, output_file_path):
         self._verify_existing_paths()
         self.logger = logging.getLogger(name)
+        self.logger.propagate = False
         if not len(self.logger.handlers):
             handler = logging.StreamHandler()
             handler.setLevel(logging.INFO)
