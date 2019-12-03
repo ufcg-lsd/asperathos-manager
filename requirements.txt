@@ -18,6 +18,7 @@ python-swiftclient
 python-monascaclient
 pytz
 pytest
+pytest-cov
 pyOpenSSL
 redis
 requests_mock
