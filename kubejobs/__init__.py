@@ -314,6 +314,11 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             'job_termination_grace_period_seconds': termination_grace
         }
 
+        if data.get('selectors'):
+            kwargs.update({
+                'selectors': data['selectors']
+            })
+
         if data.get("k8s_resources_control"):
             kwargs.update({
                 "limits": data["k8s_resources_control"]['limits'],
