@@ -35,7 +35,7 @@ def create_job(app_id, cmd, img, init_size, env_vars,
                isgx="dev-isgx",
                devisgx="/dev/isgx",
                job_termination_grace_period_seconds=30,
-               selectors={},
+               selectors=[],
                **kwargs):
 
     kube.config.load_kube_config(api.k8s_conf_path)
@@ -56,7 +56,7 @@ def create_job(app_id, cmd, img, init_size, env_vars,
     node_selector = {}
 
     for selector in selectors:
-        node_selector[str(selector['key'])] = str(selector['value'])
+        node_selector[str(selector['key']).lower()] = str(selector['value'])
 
     isgx = kube.client.V1VolumeMount(
         mount_path="/dev/isgx",
