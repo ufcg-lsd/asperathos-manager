@@ -436,7 +436,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         self.db_connector.\
             put(self.app_id, self)
 
-    def synchronize(self):
+    def synchronize(self, tries=10):
         """ Infer the job state from job status in Kubernetes.
         If a job is active in Kubernetes, its state is 'ongoing'.
         If a job is not active in Kubernetes, it can be
@@ -447,30 +447,35 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         Returns:
         None -
         """
-        try:
-            current_status = self.k8s.get_job_status(self.app_id)
-            if current_status.active is not None:
-                if self.get_application_state() != 'ongoing':
-                    self.update_application_state("ongoing")
-            else:
-                condition = current_status.conditions.pop().type
-                if condition == 'Complete':
-                    if self.get_application_state() != 'stopped':
-                        self.job_completed = True
-                        self.update_application_state("completed")
+        while tries > 0:
+            try:
+                current_status = self.k8s.get_job_status(self.app_id)
+                if current_status.active is not None:
+                    if self.get_application_state() != 'ongoing':
+                        self.update_application_state("ongoing")
+                else:
+                    condition = current_status.conditions.pop().type
+                    if condition == 'Complete':
+                        if self.get_application_state() != 'stopped':
+                            self.job_completed = True
+                            self.update_application_state("completed")
+                        else:
+                            self.terminated = True
                     else:
                         self.terminated = True
-                else:
+                        self.update_application_state("failed")
+                break
+            except Exception:
+                tries -= 1
+                if tries <= 0:
                     self.terminated = True
-                    self.update_application_state("failed")
-        except Exception:
-            self.terminated = True
-            final_states = ['completed', 'failed',
-                            'error', 'created', 'stopped']
-            if self.status not in final_states:
+                    final_states = ['completed', 'failed',
+                                    'error', 'created', 'stopped']
 
-                self.update_application_state('not found')
-            self.persist_state()
+                    if self.status not in final_states:
+
+                        self.update_application_state('not found')
+                    self.persist_state()
 
     def validate(self, data):
         data_model = {
