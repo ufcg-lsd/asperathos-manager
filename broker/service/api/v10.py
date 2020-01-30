@@ -530,7 +530,10 @@ def get_activated_cluster():
         the cluster config content as value.
     """
     global activated_cluster
-    return {activated_cluster: clusters[activated_cluster]}
+    response = {"message": "There is no active cluster"}
+    if (activate_cluster is not None):
+        response = {activated_cluster: clusters[activated_cluster]}
+    return response
 
 
 def delete_submission(submission_id, data):
