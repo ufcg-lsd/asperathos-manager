@@ -23,7 +23,7 @@ redis
 requests_mock
 six
 stevedore
-werkzeug==0.16.1 # https://github.com/pallets/flask/issues/2549
+werkzeug
 virtualenv
 flake8
 urllib3==1.22
