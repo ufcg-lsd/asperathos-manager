@@ -59,7 +59,7 @@ def check_submission(db, submission_data):
     '''
     plugin_fields = [("plugin", "manager"),
                      ("control_plugin", "controller"),
-                     ("monitor_plugin", "monitor"),
+                     # ("monitor_plugin", "monitor"),
                      ("visualizer_plugin", "visualizer")]
 
     for p, c in plugin_fields:
@@ -68,3 +68,7 @@ def check_submission(db, submission_data):
             plugin = submission_data.get(p)
         plugin = db.get_by_name_and_component(plugin, c)
         submission_data[p] = plugin.module
+
+    for plugin in submission_data.get('plugin_info').get('monitor_info'):
+        plugin = db.get_by_name_and_component(plugin, monitor)
+        # submission_data['monitor_plugin'] = plugin.module

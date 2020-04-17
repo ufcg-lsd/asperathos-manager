@@ -91,7 +91,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             status_code, report = monitor.get_job_report(
                                             api.monitor_url,
                                             self.app_id,
-                                            self.data['monitor_plugin'],
+                                            self.data['monitor_info']['plugin1']['plugin'],
                                             self.data['monitor_info'])
             time.sleep(1)
 
@@ -107,7 +107,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         else:
             report = monitor.get_detailed_report(api.monitor_url,
                                                  self.app_id,
-                                                 self.data['monitor_plugin'],
+                                                 self.data['monitor_info']['plugin1']['plugin'],
                                                  self.data['monitor_info'])
             if "error_code" in report:
                 report = {'message': 'Monitoring does not exists '
@@ -237,7 +237,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         data['visualizer_info'].\
             update({'database_data': database_data,
                     'enable_visualizer': data['enable_visualizer'],
-                    'plugin': data['monitor_plugin'],
+                    'plugin': data['monitor_info']['plugin1']['plugin'],
                     'visualizer_plugin': data['visualizer_plugin'],
                     'username': data['username'],
                     'password': data['password']})
@@ -248,8 +248,8 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
         schedule_strategy, heuristic_options = \
             self._get_control_parameters()
 
-        self.data['monitor_info'].\
-            update({'database_data': database_data,
+        for plugin in self.data['monitor_info']:
+            self.data['monitor_info'][plugin].update({'database_data': database_data,
                     'datasource_type': datasource_type,
                     'number_of_jobs': queue_size,
                     'submission_time': self.starting_time.
@@ -263,6 +263,22 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                     'max_replicas': self.data["control_parameters"]["max_rep"],
                     'min_replicas': self.data["control_parameters"]["min_rep"]
                     })
+
+        # self.data['monitor_info'].\
+        #     update({'database_data': database_data,
+        #             'datasource_type': datasource_type,
+        #             'number_of_jobs': queue_size,
+        #             'submission_time': self.starting_time.
+        #             strftime('%Y-%m-%dT%H:%M:%S.%fGMT'),
+        #             'redis_ip': self.redis_ip,
+        #             'redis_port': self.redis_port,
+        #             'enable_visualizer': self.enable_visualizer,
+        #             'enable_detailed_report': self.enable_detailed_report,
+        #             'scaling_strategy': schedule_strategy,
+        #             'heuristic_options': heuristic_options,
+        #             'max_replicas': self.data["control_parameters"]["max_rep"],
+        #             'min_replicas': self.data["control_parameters"]["min_rep"]
+        #             })
         # 'cpu_agent_port': agent_port})
 
     def _get_control_parameters(self):
@@ -333,7 +349,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
 
     def start_monitoring(self, data, collect_period=1):
         monitor.start_monitor(api.monitor_url, self.app_id,
-                              data['monitor_plugin'],
+                              # data['monitor_plugin'],
                               data['monitor_info'], collect_period)
 
     def start_controlling(self, data):
@@ -486,7 +502,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             "img": six.string_types,
             "init_size": int,
             "monitor_info": dict,
-            "monitor_plugin": six.string_types,
+            # "monitor_plugin": six.string_types,
             "redis_workload": six.string_types,
             "enable_visualizer": bool
             # The parameters below are only needed if enable_visualizer is True

@@ -19,9 +19,9 @@ import requests
 from broker.service import api
 
 
-def _get_monitor_data(plugin, plugin_info, collect_period=10):
+def _get_monitor_data(plugin_info, collect_period=10):
     start_monitor_dict = {
-        'plugin': plugin,
+        # 'plugin': plugin,
         'plugin_info': plugin_info,
         'collect_period': collect_period
     }
@@ -45,10 +45,11 @@ def get_detailed_report(monitor_url, app_id, plugin, plugin_info):
     return json.loads(resp.text)
 
 
-def start_monitor(monitor_url, app_id, plugin, plugin_info, collect_period):
+def start_monitor(monitor_url, app_id, plugin_info, collect_period):
     request_url = monitor_url + '/monitoring/' + app_id
     headers = {'Content-type': 'application/json'}
-    data = _get_monitor_data(plugin, plugin_info, collect_period)
+    # plugin = plugin_info['plugin']
+    data = _get_monitor_data(plugin_info, collect_period)
     requests.post(request_url, data=data, headers=headers)
 
 
