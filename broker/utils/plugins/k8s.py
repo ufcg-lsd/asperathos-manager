@@ -36,6 +36,7 @@ def create_job(app_id, cmd, img, init_size, env_vars,
                devisgx="/dev/isgx",
                job_termination_grace_period_seconds=30,
                selectors=[],
+               secrets=[],
                **kwargs):
 
     kube.config.load_kube_config(api.k8s_conf_path)
@@ -87,12 +88,19 @@ def create_job(app_id, cmd, img, init_size, env_vars,
         security_context=kube.client.V1SecurityContext(
             privileged=True
         ))
+
+    image_pull_secrets_spec = [kube.client.V1LocalObjectReference(name=secret)
+                               for secret in secrets]
+                               
     pod_spec = kube.client.V1PodSpec(
         termination_grace_period_seconds=job_termination_grace_period_seconds,
         containers=[container_spec],
         node_selector=node_selector,
+        image_pull_secrets=image_pull_secrets_spec,
         restart_policy="OnFailure",
         volumes=[devisgx])
+
+
     pod = kube.client.V1PodTemplateSpec(
         metadata=obj_meta,
         spec=pod_spec)
@@ -105,6 +113,7 @@ def create_job(app_id, cmd, img, init_size, env_vars,
         metadata=obj_meta,
         spec=job_spec)
 
+    KUBEJOBS_LOG.log(job)
     batch_v1 = kube.client.BatchV1Api()
     batch_v1.create_namespaced_job("default", job)
 

@@ -325,6 +325,9 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                 "requests": data["k8s_resources_control"]['requests']
                            })
 
+        if data.get("secrets"):
+            kwargs.update({"secrets": data["secrets"]})
+
         self.k8s.create_job(**kwargs)
 
         KUBEJOBS_LOG.log("Job running...")
