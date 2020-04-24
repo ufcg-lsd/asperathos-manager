@@ -245,7 +245,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
     def update_monitor_info(self, database_data,
                             datasource_type, queue_size):
 
-        schedule_strategy, heuristic_options = \
+        schedule_strategy, heuristic_options, max_replicas, min_replicas = \
             self._get_control_parameters()
 
         for plugin in self.data['monitor_info']:
@@ -260,39 +260,32 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
                     'enable_detailed_report': self.enable_detailed_report,
                     'scaling_strategy': schedule_strategy,
                     'heuristic_options': heuristic_options,
-                    'max_replicas': self.data["control_parameters"]["max_rep"],
-                    'min_replicas': self.data["control_parameters"]["min_rep"]
+                    'max_replicas': max_replicas,
+                    'min_replicas': min_replicas
                     })
-
-        # self.data['monitor_info'].\
-        #     update({'database_data': database_data,
-        #             'datasource_type': datasource_type,
-        #             'number_of_jobs': queue_size,
-        #             'submission_time': self.starting_time.
-        #             strftime('%Y-%m-%dT%H:%M:%S.%fGMT'),
-        #             'redis_ip': self.redis_ip,
-        #             'redis_port': self.redis_port,
-        #             'enable_visualizer': self.enable_visualizer,
-        #             'enable_detailed_report': self.enable_detailed_report,
-        #             'scaling_strategy': schedule_strategy,
-        #             'heuristic_options': heuristic_options,
-        #             'max_replicas': self.data["control_parameters"]["max_rep"],
-        #             'min_replicas': self.data["control_parameters"]["min_rep"]
-        #             })
-        # 'cpu_agent_port': agent_port})
 
     def _get_control_parameters(self):
 
-        control_parameters = self.data['control_parameters']
+        control_plugin_key = list(self.data['control_info'].keys())[0]
+        control_parameters = self.data['control_info'][control_plugin_key]
         schedule_strategy = 'default'
         heuristic_options = None
+        max_replicas = -1
+        min_replicas = -1
+
         if 'schedule_strategy' in control_parameters:
             schedule_strategy = control_parameters['schedule_strategy']
 
         if 'heuristic_options' in control_parameters:
             heuristic_options = control_parameters['heuristic_options']
 
-        return schedule_strategy, heuristic_options
+        if 'max_replicas' in control_parameters:
+            max_replicas = control_parameters['max_replicas']
+
+        if 'min_replicas' in control_parameters:
+            min_replicas = control_parameters['min_replicas']
+
+        return schedule_strategy, heuristic_options, max_replicas, min_replicas
 
     def start_visualization(self, data):
         self.enable_visualizer = data['enable_visualizer']
@@ -496,13 +489,11 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
     def validate(self, data):
         data_model = {
             "cmd": list,
-            "control_parameters": dict,
-            "control_plugin": six.string_types,
+            "control_info": dict,
             "env_vars": dict,
             "img": six.string_types,
             "init_size": int,
             "monitor_info": dict,
-            # "monitor_plugin": six.string_types,
             "redis_workload": six.string_types,
             "enable_visualizer": bool
             # The parameters below are only needed if enable_visualizer is True

@@ -25,7 +25,7 @@ BASIC_PLUGINS = [
             "source": "",
             "component": "monitor",
             "plugin_source": "",
-            "module": "kubejobs"
+            "module": "kubejobs_cost"
         },
         {
             "name": "k8s-grafana",
