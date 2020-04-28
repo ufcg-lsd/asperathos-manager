@@ -14,6 +14,13 @@ BASIC_PLUGINS = [
             "module": "kubejobs"
         },
         {
+            "name": "kubejobs_multierror",
+            "source": "",
+            "component": "controller",
+            "plugin_source": "",
+            "module": "kubejobs_multi_error"
+        },
+        {
             "name": "kubejobs",
             "source": "",
             "component": "monitor",
