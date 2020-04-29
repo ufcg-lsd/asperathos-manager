@@ -75,7 +75,6 @@ try:
                 redis_ip = config.get('kubejobs', 'redis_ip')
 
 except Exception as e:
-    print(e)
     API_LOG.log("Error: %s" % e)
     quit()
 

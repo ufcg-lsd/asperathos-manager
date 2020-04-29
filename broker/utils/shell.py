@@ -15,8 +15,12 @@
 
 import subprocess
 
+from broker.utils.logger import Log
+
 R_PREFIX = 'Rscript '
 PYTHON_PREFIX = 'python '
+
+LOGGER = Log('utils_shell_log', 'shell.log')
 
 
 def execute_r_script(script, args):
@@ -25,12 +29,12 @@ def execute_r_script(script, args):
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = p_status.communicate()
     try:
-        print(out, err)
+        LOGGER.log("{} {}".format(out, err))
         value = float(out)
         return value
     except Exception as e:
-        print(e)
-        print("Error message captured:", err)
+        LOGGER.log(e)
+        LOGGER.log("Error message captured: {}".format(err))
         raise
 
 
