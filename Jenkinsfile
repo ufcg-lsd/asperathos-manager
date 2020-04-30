@@ -13,6 +13,12 @@ pipeline {
         sh 'tox -epep8'
       }
     }
+    stage('Coverage') {
+      agent any
+      steps {
+        sh 'tox -e coverage'
+      }
+    }
     stage('Integration') {
       agent any
       steps {
