@@ -348,7 +348,7 @@ def create_influxdb(app_id, database_name="asperathos",
                 try:
                     # TODO change redis_ip to node_ip
                     client = InfluxDBClient(redis_ip, node_port, 'root',
-                                            'root', database_name)
+                                            'root', database_name, timeout=timeout)
                     client.create_database(database_name)
                     KUBEJOBS_LOG.log("InfluxDB is ready!!")
                     ready = True
