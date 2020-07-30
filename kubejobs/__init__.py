@@ -164,6 +164,7 @@ class KubeJobsExecutor(base.GenericApplicationExecutor):
             self.start_monitoring(data)
             self.add_redis_info_to_data()
             self.start_controlling(data)
+            KUBEJOBS_LOG.log("Waiting for job to finish")
             self.wait_job_finish(check_interval=1)
 
         except Exception as ex:

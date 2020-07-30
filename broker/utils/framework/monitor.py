@@ -17,6 +17,9 @@
 import json
 import requests
 from broker.service import api
+from broker.utils import logger
+
+KUBEJOBS_LOG = logger.Log("KubeJobsPlugin", "logs/kubejobs.log")
 
 
 def _get_monitor_data(plugin_info, collect_period=10):
@@ -40,8 +43,11 @@ def get_job_report(monitor_url, app_id, plugin, plugin_info):
 def get_detailed_report(monitor_url, app_id, plugin, plugin_info):
     request_url = monitor_url + '/monitoring/' + app_id + '/report/detailed'
     headers = {'Content-type': 'application/json'}
+    KUBEJOBS_LOG.log("Getting monitor data")
     data = _get_monitor_data(plugin, plugin_info)
+    KUBEJOBS_LOG.log("Requesting report")
     resp = requests.get(request_url, data=data, headers=headers)
+    KUBEJOBS_LOG.log("Got report")
     return json.loads(resp.text)
 
 

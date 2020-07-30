@@ -35,6 +35,13 @@ BASIC_PLUGINS = [
             "module": "kubejobs_cost"
         },
         {
+            "name": "kubejobs_replica_cost",
+            "source": "",
+            "component": "monitor",
+            "plugin_source": "",
+            "module": "kubejobs_replica_cost"
+        },
+        {
             "name": "k8s-grafana",
             "source": "",
             "component": "visualizer",
